@@ -1,0 +1,60 @@
+﻿<UserControl 
+    x:Class="Indicator.Views.MainView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm" 
+    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+    xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
+    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+    xmlns:ViewModels="clr-namespace:Indicator.ViewModels"
+    xmlns:views="clr-namespace:Indicator.Views"
+    mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300"
+    DataContext="{dxmvvm:ViewModelSource Type={x:Type ViewModels:MainViewModel}}"
+    >
+    <UserControl.Resources>
+        <dxmvvm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <dxmvvm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverterInverse" Inverse="True"/>
+    </UserControl.Resources>
+
+    <dxmvvm:Interaction.Behaviors>
+        <dx:DXMessageBoxService/>
+    </dxmvvm:Interaction.Behaviors>
+
+    <StackPanel x:Name="LayoutRoot"  >
+        <TextBlock x:Name="FinalFormula" TextWrapping="Wrap" Padding="2" Text="{Binding Formula, Mode=TwoWay}" TextAlignment="Center" FontSize="14"></TextBlock>
+        <views:SignalsTable  Padding="2" HorizontalAlignment="Center"
+          dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Parameter1, ElementName=LayoutRoot}"  />
+        <Grid Width="239">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="25" />
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="44.333"/>
+                <ColumnDefinition Width="13.333"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+
+            <dxe:ComboBoxEdit  Grid.Column="0" ItemsSource="{Binding opComp}" IsTextEditable="False"
+                                              EditValue="{Binding Condition, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                              NullText=">"  />
+            <dxe:TextEdit MaskType="Numeric" Margin="2,0,2,0" Grid.Column="1" Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverterInverse}, ElementName=toggleRule }"  Text="{Binding Value, Mode=TwoWay}" Grid.ColumnSpan="2"  />
+            <dxe:ToggleSwitch x:Name="toggleRule" Grid.Column="4" Content="Rule" ContentPlacement="Both" UncheckedStateContent="Value" CheckedStateContent="Rule" IsChecked="{Binding RuleOrValueBool}" Grid.ColumnSpan="3"/>
+        </Grid>
+        <views:SignalsTable Padding="5" HorizontalAlignment="Center" Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=toggleRule}"
+                            dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Parameter2, ElementName=LayoutRoot}"/>
+        <StackPanel >
+            <dx:SimpleButton Content="quiktest" Padding="2,2,2,2" Width="78" HorizontalAlignment="Right" Command="{Binding QuikTestCommand}"/>
+            <dx:SimpleButton Content="save" Padding="3" Width="77" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Command="{Binding SaveCommand}"/>
+
+        </StackPanel>
+
+    </StackPanel>
+
+
+</UserControl>

@@ -1,0 +1,45 @@
+﻿<UserControl x:Class="Indicator.Views.PropertyGrid"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ViewModels="clr-namespace:Indicator.ViewModels"
+             mc:Ignorable="d"
+             
+             xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm" 
+             xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+             xmlns:dxprg="http://schemas.devexpress.com/winfx/2008/xaml/propertygrid" 
+             DataContext="{dxmvvm:ViewModelSource Type={x:Type ViewModels:PropertyGridViewModel}}"
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core" xmlns:resource="clr-namespace:Indicator.Resource" d:DataContext="{d:DesignInstance Type=resource:CustomRuleSignal}">
+    <UserControl.Resources>
+        <DataTemplate x:Key="DataTemplate">
+            <dxe:ComboBoxEdit ItemsSource="{Binding DataVariants, Mode=TwoWay}" DisplayMember="Value" ValueMember="Key"   />
+        </DataTemplate>
+        <dxmvvm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <dxmvvm:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverterInverse" Inverse="True"/>
+    </UserControl.Resources>
+    <!--<UserControl.DataContext>
+        <ViewModels:PropertyGridViewModel/>
+    </UserControl.DataContext>-->
+
+    <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:CurrentWindowService/>
+    </dxmvvm:Interaction.Behaviors>
+
+
+    <StackPanel>
+        <dxprg:PropertyGridControl ShowProperties="WithPropertyDefinitions" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowSearchBox="False" ShowCategories="Hidden" ShowToolPanel="False" SelectedObject="{Binding}">
+            <dxprg:PropertyDefinition Path="Length1" ShowEditorButtons="True" Visibility="{Binding Length1Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="Length2" ShowEditorButtons="True" Visibility="{Binding Length2Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="Data" ShowEditorButtons="True" Visibility="{Binding DataVisible,Converter={StaticResource BooleanToVisibilityConverter}}">
+                <dxprg:PropertyDefinition.EditSettings>
+                    <dxe:ComboBoxEditSettings  ItemsSource="{Binding dataVariants, Mode=TwoWay}" DisplayMember="Variant" />
+                </dxprg:PropertyDefinition.EditSettings>
+            </dxprg:PropertyDefinition>
+        </dxprg:PropertyGridControl>
+        <!-- <dxprg:PropertyGridControl ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowSearchBox="False" ShowCategories="Hidden" ShowToolPanel="False" SelectedObject="{Binding}"/>-->
+        <dx:SimpleButton Content="Save" Padding="2,0,2,0" Command="{Binding SaveWindowCommand}"/>
+    </StackPanel>
+</UserControl>
+
+

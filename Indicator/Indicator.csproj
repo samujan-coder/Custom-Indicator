@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <LangVersion>9</LangVersion>
+    <IncludePackageReferencesDuringMarkupCompilation>True</IncludePackageReferencesDuringMarkupCompilation>
+    <Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="DevExpress.Mvvm.CodeGenerators" Version="21.2.1.1" />
+    <PackageReference Include="DevExpress.Wpf.Core" Version="21.2.*-*" />
+    <PackageReference Include="devexpress.wpf.grid.core" Version="21.2.4" />
+    <PackageReference Include="devexpress.wpf.propertygrid" Version="21.2.4" />
+    <PackageReference Include="DevExpress.Wpf.Themes.All" Version="21.2.*-*" />
+    <PackageReference Include="NLog" Version="4.7.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="TradersToolbox.Core">
+      <HintPath>..\..\..\..\Users\samujan\Downloads\TradersToolbox\TradersToolbox\TradersToolbox.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+</Project>
