@@ -36,7 +36,7 @@ namespace Indicator
             InitializeComponent();
 
             #region For test
-            /*
+            
             // ----- почему то выкидывает ошибку NULL (не знаю, где зарыта корова) ---------- // 
             var seclist = new List<SymbolId>() { new SymbolId("@Vix", "1D", 0, false) };
            // List<SymbolId> viewSymbols = new List<SymbolId>() { new SymbolId("@ES", "", 0, false), new SymbolId("@ES", "", 0, false), new SymbolId("@ES", "", 0, false), new SymbolId("Vix", "", 0, false) };
@@ -54,7 +54,7 @@ namespace Indicator
                     Debug.WriteLine(l.Key + " " + l.TextVisual);
              });
 
-            /*
+            
             signalsListComp = SignalsData.CustomSignalsNamesEL;
             signalsListComp.ForEach(s=>Debug.Print(s.Value));
 
@@ -85,7 +85,7 @@ namespace Indicator
             List<CustomRuleSignal> leftcustomRules = new List<CustomRuleSignal> ()
             {
                 // new CustomRuleSignal(null,new SignalValueRAW("Close",symbolId) {Args= new List<SignalArg>()},0),
-                 //new CustomRuleSignal("+", new SignalValueRSI("RSI",symbolId,new SignalValueRAW("Close",symbolId),new SignalArg("Length",SignalArg.ArgType.Static,1,1000,44)),0)
+                //new CustomRuleSignal("+", new SignalValueRSI("RSI",symbolId,new SignalValueRAW("Close",symbolId),new SignalArg("Length",SignalArg.ArgType.Static,1,1000,44)),0)
             };
             var result = "";
             leftcustomRules.ForEach(s=>{result+=s.AllString;});
@@ -101,7 +101,7 @@ namespace Indicator
             Console.WriteLine($"<{word}>");
             }
            
-            */
+            
             #endregion
             
         }

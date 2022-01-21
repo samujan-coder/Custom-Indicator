@@ -130,6 +130,11 @@ namespace Indicator.ViewModels
 
         public void Edit()
         {
+            if (SelectedCustomRuleSignal.MainSignal.Args == null)
+            {
+                ThemedMessageBox.Show("No Parameters for this Signal");
+                return;
+            }
             if (SelectedCustomRuleSignal.MainSignal.Args.Count == 0)
             { 
                 ThemedMessageBox.Show("No Parameters for this Signal");
