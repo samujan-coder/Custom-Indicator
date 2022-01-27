@@ -1,2 +1,2 @@
 # CustomIndicator
-AdditionalData.rar - в ней лежат дополнительные файлы
+AdditionalData.rar - additional files to start app 
