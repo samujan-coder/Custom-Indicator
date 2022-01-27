@@ -74,8 +74,9 @@ namespace Indicator.Resource
             get => _selectedmainsignal;
             set
             {
-                _mainSignal = _allsignals.FirstOrDefault(s => s.Key == SelectedMainSignal);
-                _selectedmainsignal = value; OnPropertyChanged(nameof(SelectedMainSignal));
+                _selectedmainsignal = value;
+                _mainSignal = _allsignals.FirstOrDefault(s => s.Key == _selectedmainsignal);
+                OnPropertyChanged(nameof(SelectedMainSignal));
             }
         }
 

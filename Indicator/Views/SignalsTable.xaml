@@ -25,7 +25,7 @@
             <dxmvvm:WindowService.WindowStyle>
                 <Style TargetType="dx:ThemedWindow">
                     <Setter Property="Width" Value="300" />
-                    <Setter Property="Height" Value="100" />
+                    <Setter Property="Height" Value="400" />
                 </Style>
             </dxmvvm:WindowService.WindowStyle>
         </dxmvvm:WindowService>
@@ -44,7 +44,7 @@
 
             <dxg:GridColumn FieldName="SelectedMainSignal" Width="auto" IsSmart="True">
                 <dxg:GridColumn.EditSettings >
-                    <dxe:ComboBoxEditSettings  ItemsSource="{Binding signalsListComp}"
+                    <dxe:ComboBoxEditSettings  ItemsSource="{Binding AllSignals}"
                                               DisplayMember="Key" ValueMember="Key" />
                 </dxg:GridColumn.EditSettings>
             </dxg:GridColumn>

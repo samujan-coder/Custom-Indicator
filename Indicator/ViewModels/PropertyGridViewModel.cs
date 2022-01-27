@@ -9,6 +9,10 @@ using System.Windows.Input;
 using System;
 using DevExpress.Xpf.Core;
 using Indicator.Resource;
+using System.ComponentModel;
+using Indicator.Data;
+using DevExpress.Mvvm.Native;
+using TradersToolbox.Core;
 
 namespace Indicator.ViewModels
 {
@@ -27,48 +31,80 @@ namespace Indicator.ViewModels
     [POCOViewModel]
     public class PropertyGridViewModel
     {
+        public IEnumerable<Signal> AllSignals { get; set; }
+        public virtual string Formula { get 
+                {
+                if (Signal != null)
+                    return Signal.TextVisual;
+                else return "wait....";
+                } 
+        }
+
+        protected IWindowService WindowService { get { return this.GetService<IWindowService>(); } }
+
+        public string[] SignalsString { get; } = { "Close", "Open", "High", "Low",};
+
+        private ExtraSignal SelectedExtraSignal { get; set; }
+
+        private string _selectedproperty;
+        public string SelectedProperty { get => _selectedproperty; set {
+                _selectedproperty = value;
+                
+                var getNumbers = (from t in _selectedproperty
+                                  where char.IsDigit(t)
+                                  select t).ToArray();
+               var i =  (int)Char.GetNumericValue(getNumbers[0]);
+               SelectedExtraSignal = ExtraSignals[i];
+            } }
         protected ICurrentWindowService CurrentWindowService { get { return this.GetService<ICurrentWindowService>(); } }
         public static PropertyGridViewModel Create()
         {
             return ViewModelSource.Create(() => new PropertyGridViewModel());
         }
         SymbolId symbolId = new SymbolId("@Vix", "1D", 0, false);
-        public List<DataVariant> dataVariants { get; set; } = new List<DataVariant>()
-           { new DataVariant("Open"), new DataVariant("High"), new DataVariant("Low"), 
-            new DataVariant("Close"), new DataVariant("Volume"),
-           };
 
         public Signal Signal;
 
 
         private CustomRuleSignal CustomSignal;
+
+        [Description("Settings")]
         /// <summary>
         /// Args for Values (Length/max(N)/min(N))
+        /// Сохраняем сразу на лету!
         /// </summary>
-        public ObservableCollection<SignalArg> ValueArgs { get; set; }
+        public ObservableCollection<SignalArg> ValueArgs { get => Signal.AllArgs; set => Signal.Args = value.ToList(); }
+
+        public List<string> SignalsListComp { get; set; }
 
         public SignalArg LengthArg { get; set; }
 
+        [Description("ChildSignals")]
         /// <summary>
         /// Child signals (CLOSE,OPEN, HIGH, LOW) 
         /// </summary>
-        public IReadOnlyList<Signal> DataSignals { get; set; }
+        public ObservableCollection<Signal> ChildSignals { get; set; }
+
+        public ObservableCollection<ExtraSignal> ExtraSignals { get; set; }
 
         public ICommand SaveWindowCommand { get; private set; }
+        public ICommand OpenChildCommand { get; private set; }
+
         /// <summary>
         /// Logic return with signals 
         /// </summary>
         /// 
 
-        public void CreateSaveCommand()
+        public void CreateAllCommands()
         {
             SaveWindowCommand = new DelegateCommand(() => SaveWindow());
+            OpenChildCommand = new DelegateCommand(() => OpenChild());
         }
 
 
         public PropertyGridViewModel() 
         {
-            CreateSaveCommand();
+            CreateAllCommands();
         }
 
         /// <summary>
@@ -76,22 +112,35 @@ namespace Indicator.ViewModels
         /// </summary>
         public int pattern;
 
-        public PropertyGridViewModel(CustomRuleSignal customSignal)
+        public PropertyGridViewModel(CustomRuleSignal customSignal = null, Signal signal=null)
         {
-
             try
             {
-                CreateSaveCommand();
+                CreateAllCommands();
 
-                Signal = customSignal.MainSignal;
-                CustomSignal = customSignal;
+                if (customSignal != null)
+                {
+                    Signal = customSignal.MainSignal;
+                    CustomSignal = customSignal;
+                } else if(signal!=null)
+                {
+                    Signal = signal;
+                }  
 
                 ValueArgs = Signal.AllArgs; // length
-                DataSignals = Signal.AllChildren; // Close, Open, High
+                ChildSignals = Signal.Children; // Close, Open, High
 
+                ExtraSignals = new NotifyObservableCollection<ExtraSignal>();
+                SignalsListComp = new List<string>();
+
+                AllSignals.ForEach(s => { SignalsListComp.Add(s.Key); });
+                Signal.Children.ForEach(s => {ExtraSignals.Add(new ExtraSignal(s)); });
+
+                /* LAST VERSION 
+                
                 //Currently all types of Signals 
                 int valueArgsCount = ValueArgs.Count;
-                int datasignalsCount = DataSignals.Count;
+                int datasignalsCount = ChildSignals.Count;
 
                 //? вообще если такой параметр? помоему нет ))
                 if (valueArgsCount == 1 && datasignalsCount == 0)
@@ -108,7 +157,7 @@ namespace Indicator.ViewModels
                     pattern = 2;
                     LengthArg = ValueArgs[0];
                     Length1 = (int)LengthArg.BaseValue;
-                    Data = dataVariants.FirstOrDefault(s => s.Variant == DataSignals[0].Key);
+                    Data = dataVariants.FirstOrDefault(s => s.Variant == ChildSignals[0].Key);
 
                 }
                 else if (valueArgsCount == 2 && datasignalsCount == 1)
@@ -117,8 +166,8 @@ namespace Indicator.ViewModels
                     pattern = 3;
                     Length1 = (int)ValueArgs[0].BaseValue;
                     Length2 = (int)ValueArgs[1].BaseValue;
-                    Data = dataVariants.FirstOrDefault(s => s.Variant == DataSignals[0].Key);
-                }
+                    Data = dataVariants.FirstOrDefault(s => s.Variant == ChildSignals[0].Key);
+                }*/
             }
             catch (Exception ex)
             { ThemedMessageBox.Show(ex.Message); }
@@ -127,6 +176,7 @@ namespace Indicator.ViewModels
 
 
         /// <summary>
+        /// OLD CODE. FOR FIXED VARIANT 
         /// (Length/max(N)/min(N)) 1
         /// </summary>
         public int Length1 { get => _length; set { _length = value; Length1Visible = true; } }
@@ -134,6 +184,7 @@ namespace Indicator.ViewModels
         public bool Length1Visible { get; set; }
 
         /// <summary>
+        /// OLD CODE FOR FIXED VARIANT 
         /// (Length/max(N)/min(N)) 2
         /// </summary>
         public int Length2 { get => _length2; set { _length2 = value; Length2Visible = true; } }
@@ -142,18 +193,23 @@ namespace Indicator.ViewModels
 
         /// <summary>
         /// Open, High, Low, Close и т.д. 
+        /// FIXED VARIANT 
         /// </summary>
         //public string Data {get =>_data;set {_data = value;DataVisible=true; } } 
         private DataVariant _data;
 
 
         public bool DataVisible { get; set; }
-        public DataVariant Data { get => _data; set {_data = value; DataVisible = true; } }
+        public DataVariant Data { get => _data; set { _data = value; DataVisible = true; } }
 
+        // public IServiceContainer ServiceContainer { get { return this.GetService<IServiceContainer>(); } }
+ 
         void SaveWindow()
         {
+
             try
             {
+                /* ------ FIXED VARIAN SAVING (OLD)----*/
                 if (pattern == 1)
                 { // Example WinsLast (5) or Stochastics(2)
                     Signal.Args[0] = new SignalArg("Length", SignalArg.ArgType.Static, 0, 100000, Length1);
@@ -162,6 +218,7 @@ namespace Indicator.ViewModels
                 {  //case rsi (Open,5)
                     Signal.Args[0] = new SignalArg("Length", SignalArg.ArgType.Static, 0, 100000, Length1);
                     Signal.Children[0] = new SignalValueRAW(Data.Variant, symbolId);
+                  
                 }
                 else if (pattern == 3)
                 {
@@ -171,6 +228,7 @@ namespace Indicator.ViewModels
                     Signal.Children[0] = new SignalValueRAW(Data.Variant, symbolId);
                 }
 
+                if(CustomSignal!=null)
                 CustomSignal.UpdateMainSignal();
 
                 //CurrentWindowService.Close();
@@ -181,9 +239,24 @@ namespace Indicator.ViewModels
             
         }
 
+        public void OpenChild()
+        {
+            if (Signal.Args == null)
+            {
+                ThemedMessageBox.Show("No Parameters for this Signal");
+                return;
+            }
+            if (Signal.Args.Count == 0)
+            {
+                ThemedMessageBox.Show("No Parameters for this Signal");
+                return;
+            }
 
-
-
+            var propertygrid = new PropertyGridViewModel(CustomSignal, SelectedExtraSignal.Signal) { AllSignals = AllSignals };
+            WindowService.Show("PropertyGrid", propertygrid);
+            //WindowService.Show("SignalsTable", signalstable);
+            
+        }
 
     }
 }

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DevExpress.Mvvm;
+using DevExpress.Xpf.Core;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -12,5 +14,9 @@ namespace Indicator
     /// </summary>
     public partial class App : Application
     {
+        static App()
+        {
+           
+        }
     }
 }

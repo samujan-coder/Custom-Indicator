@@ -24,5 +24,15 @@ namespace Indicator.Views
         {
             InitializeComponent();
         }
+        private void PropertyGridControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            propertyGrid1.Expand("ValueArgs");
+            propertyGrid1.Expand("ChildSignals");
+        }
+        private void PropertyGridControl_CustomExpand(object sender, DevExpress.Xpf.PropertyGrid.CustomExpandEventArgs args)
+        {
+           // if (args.Row.FullPath.Contains("ValueArgs") || args.Row.FullPath.Contains("ChildSignals"))
+                args.IsExpanded = true;
+        }
     }
 }

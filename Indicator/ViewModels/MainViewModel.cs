@@ -97,6 +97,9 @@ namespace Indicator.ViewModels
             Messenger.Default.Register<SignalsTableMessage>(this, OnSignalsTableMessage);
 
             //каждый сигнал должен иметь в себе Offset (временно)
+
+           
+
             var argList = new List<SignalArg>()
             {
                 new SignalArg(SignalParametric.rule1_Base_Offset_key,SignalArg.ArgType.Static,0,1000000,0),
@@ -122,7 +125,7 @@ namespace Indicator.ViewModels
             {
                 int i = Int32.Parse(signalstable.TableNumber);
                 SignalsTables[i] = signalstable;
-                UpdateFormula();
+                UpdateFormula(false);
             }
         }
 
@@ -142,7 +145,7 @@ namespace Indicator.ViewModels
                 for (int i = 0; i <= nymberofsignaltables; i++)
                 {
                     if (SignalsTables[i] != null)
-                    { _allFormulas[i] = SignalsTables[i].AllTextForAllSignals; }
+                    {   _allFormulas[i] = SignalsTables[i].AllTextForAllSignals; }
                 }
 
             }
@@ -170,6 +173,7 @@ namespace Indicator.ViewModels
             // всего на два обьекта внутри себя с Offset
             // Сейчас Offset переделывается и вместо родительского объекта, теперь дочерний будет хранить OFFSET
             // Тестовая формула
+
             // CLOSE[0] + RSI (CLOSE, 44) [0] > Open [0] - RSI (OPEN, 2)[0];
 
             //TODO Каждый сигнал должен иметь в себе аргументы 

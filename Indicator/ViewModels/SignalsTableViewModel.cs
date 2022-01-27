@@ -16,8 +16,13 @@ namespace Indicator.ViewModels
     public  class SignalsTableViewModel:ISupportParameter
     {
         protected IWindowService WindowService { get { return this.GetService<IWindowService>(); } }
-        
+
         public virtual NotifyObservableCollection<CustomRuleSignal> CustomRuleSignals { get; set; }
+
+        /// <summary>
+        /// Для таблицы настроек, чтобы находу можно было менять KEY 
+        /// </summary>
+        public  NotifyObservableCollection<ExtraSignal>  ExtraSignals { get; set; }
         public static SignalsTableViewModel Create()
         {
             return ViewModelSource.Create(() => new SignalsTableViewModel());
@@ -27,7 +32,7 @@ namespace Indicator.ViewModels
         
         public Dictionary<string, string> OperatorsString { get; } = new Dictionary<string, string>() { { " ", " "},{ "+", "+" }, {"-", "-" }, { "/", "/" }, {"*", "*" }};
        
-        public IEnumerable<Signal> signalsListComp { get; private set; }
+        public IEnumerable<Signal> AllSignals { get; private set; }
 
 
         /// <summary>
@@ -53,7 +58,8 @@ namespace Indicator.ViewModels
             var seclist = new List<SymbolId>() { new SymbolId("@Vix", "1D", 0, false) };
             
             //позже добавить в этот список число, чтобы реализовать формулу 0.5 * Close[0]
-            signalsListComp = SignalFactoryCopy.GetBaseSignals(seclist).Where(s => s.Type == Signal.SignalTypes.BaseValuable);
+            AllSignals = SignalFactoryCopy.GetBaseSignals(seclist).Where(s => s.Type == Signal.SignalTypes.BaseValuable);
+          
         
         }
 
@@ -84,9 +90,9 @@ namespace Indicator.ViewModels
             //default first variant
                CustomRuleSignals = new NotifyObservableCollection<CustomRuleSignal> ()
                 { 
-                 new CustomRuleSignal(signalsListComp,null,"Open",0) //Close
+                 new CustomRuleSignal(AllSignals,null,"Open",0) //Close
                  {SelectedValueOperator=0, },
-                 new CustomRuleSignal(signalsListComp,"+","RSI",0) //+RSI
+                 new CustomRuleSignal(AllSignals,"+","RSI",0) //+RSI
                  {SelectedValueOperator=1,}
                  };
             }
@@ -117,7 +123,7 @@ namespace Indicator.ViewModels
         #region Commands
         public void Add()
         {
-            var newCustomRuleSignal = new CustomRuleSignal(signalsListComp, "+", "RSI", 0) { SelectedValueOperator = 1, };
+            var newCustomRuleSignal = new CustomRuleSignal(AllSignals, "+", "RSI", 0) { SelectedValueOperator = 1, };
             newCustomRuleSignal.PropertyChanged += S_PropertyChanged;
             CustomRuleSignals.Add(newCustomRuleSignal);//+RSI
         }
@@ -140,8 +146,12 @@ namespace Indicator.ViewModels
                 ThemedMessageBox.Show("No Parameters for this Signal");
                 return;
             }
-            var propertygrid = new PropertyGridViewModel(SelectedCustomRuleSignal);
+            var propertygrid = new PropertyGridViewModel(SelectedCustomRuleSignal) { AllSignals=AllSignals};
+            
             WindowService.Show("PropertyGrid", propertygrid);
+
+        
+
         }
 
         #endregion
