@@ -45,7 +45,7 @@
             <dxg:GridColumn FieldName="SelectedMainSignal" Width="auto" IsSmart="True">
                 <dxg:GridColumn.EditSettings >
                     <dxe:ComboBoxEditSettings  ItemsSource="{Binding AllSignals}"
-                                              DisplayMember="Key" ValueMember="Key" />
+                                              DisplayMember="Text" ValueMember="Key" />
                 </dxg:GridColumn.EditSettings>
             </dxg:GridColumn>
 

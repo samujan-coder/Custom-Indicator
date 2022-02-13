@@ -62,7 +62,7 @@ namespace Indicator.ViewModels
         public virtual string ReceivedMessage { get; protected set; }
         public SignalParametric AllFormula { get; set; }
 
-        private decimal _value;
+        private decimal _value = (decimal) 1.9;
         public decimal Value
         {
             get => _value; set
@@ -256,25 +256,107 @@ namespace Indicator.ViewModels
         /// </summary>
         public void Save()
         {
+            //для каждой таблицы, всего их две 
+            //сначала работаем для левой, потом для правой 
             SignalsTables.ForEach(signaltable =>
             {
 
+
+
+
                 var signals = signaltable.CustomRuleSignals;
+
+                // должна быть где то проверка на то, что у нас объект может состоять просто тупо из одного элемента
+                if( signals.Count==1)
+                {
+
+                }
+
                 List<Signal> sumsignals = new List<Signal>();
-                SignalValueArithmetic firstArithmetic = null;
+                SignalValueArithmetic summingALLFORMULA = new SignalValueArithmetic("sumFormula",symbolId,SignalValueArithmetic.Operation.Sum);
+
+                //список +/- для одной строки
+                //поскольку мы не можем смешивать + и - в одном SignalValueArithmetic
+                // List<SignalValueArithmetic> _sumMinusList = new List<SignalValueArithmetic>();
+
+                //список из складывающих или вычитывающих 
+                Dictionary<string, SignalValueArithmetic> _sumMinusList = new Dictionary<string, SignalValueArithmetic>();
+
+                //список умножителей для одной строки
+                List<SignalValueArithmetic> multipliers = new List<SignalValueArithmetic>();
+                
+
+                bool collectingmultipliers = false;
+
+                //список индексов из которых складываем умножитель
+                List<int> numbersformultipliers = new List<int>(); 
+
                 for (int i = 0; i <= signals.Count - 1; i++)
                 {
 
                     if (signals[i + 1].Operator == "/" || signals[i + 1].Operator == "*")
-                    { // если у следующего оператора есть 
+                    { // условие для создания внутреннего SignalValueAripmetic с условиями умножения или деления 
+                        collectingmultipliers = true;
+                      
 
-                        // если еще никогда не создавался первый сигнал на сумму
-                        if (firstArithmetic == null) { }
+  
                     }
                     else
                     {
-                        // если еще никогда не создавался первый сигнал на сумму
-                        if (firstArithmetic == null) { }
+                     
+                        if(collectingmultipliers = true)
+                        {
+                            //это означает, что прекратился сбор умножителей
+                            //то есть из прошлых переменных нужно собрать один умножитель
+
+                            collectingmultipliers = false;
+                        }
+                        else
+                        {
+                            // это означает, что умножителей нет, обычная формула 
+
+                            
+                            string last = ""; // если никогда не создавался, то оператор будет ""
+                            if(_sumMinusList.Count!=0)
+                               last = _sumMinusList.Keys.Last(); // если создавался, то выведем 
+
+                            if (signals[i + 1].Operator == "+")
+                            { //должны проверить содержит ли последний элемент
+                              //_sumMinusList тот же знак, 
+                              // что и + 
+                                if (last != "+")
+                                { // не равен, либо пусто....
+                                  // значит должны создать новый
+
+                                }
+                                else
+                                { // с таким же знаком существует
+                                  // значит добавляем обьект в него 
+
+                                }
+
+                            }
+                            else if (signals[i + 1].Operator == "-")
+                            {
+                                //должны проверить содержит ли последний элемент
+                                //_sumMinusList тот же знак, 
+                                // что и + 
+
+                                if (last != "-")
+                                { // не равен, либо пусто....
+                                  // значит должны создать новый
+
+                                }
+                                else
+                                { // с таким же знаком существует
+                                  // значит добавляем обьект в него 
+
+                                }
+
+                            }
+
+                        } 
+                       
                     }
                 }
 

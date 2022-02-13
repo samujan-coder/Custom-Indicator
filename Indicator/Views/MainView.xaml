@@ -43,7 +43,7 @@
             <dxe:ComboBoxEdit  Grid.Column="0" ItemsSource="{Binding opComp}" IsTextEditable="False"
                                               EditValue="{Binding Condition, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
                                               NullText=">"  />
-            <dxe:TextEdit MaskType="Numeric" Margin="2,0,2,0" Grid.Column="1" Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverterInverse}, ElementName=toggleRule }"  Text="{Binding Value, Mode=TwoWay}" Grid.ColumnSpan="2"  />
+            <dxe:TextEdit AllowUpdateTextBlockWhenPrinting="True"  MaskType="Numeric" Margin="2,0,2,0" Grid.Column="1" Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverterInverse}, ElementName=toggleRule }"  Text="{DXBinding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.ColumnSpan="2"   />
             <dxe:ToggleSwitch x:Name="toggleRule" Grid.Column="4" Content="Rule" ContentPlacement="Both" UncheckedStateContent="Value" CheckedStateContent="Rule" IsChecked="{Binding RuleOrValueBool}" Grid.ColumnSpan="3"/>
         </Grid>
         <views:SignalsTable Padding="5" HorizontalAlignment="Center" Visibility="{Binding IsChecked, Converter={StaticResource BooleanToVisibilityConverter}, ElementName=toggleRule}"

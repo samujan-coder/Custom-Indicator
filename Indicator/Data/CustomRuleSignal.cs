@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using TradersToolbox.Core.Serializable;
 using System.Runtime.Serialization;
+using Indicator.Data;
 
 namespace Indicator.Resource
 {
@@ -31,18 +32,20 @@ namespace Indicator.Resource
         {
             get
             {
+                if (MainSignal == null) return "";
+                if (MainSignal is SignalValueConstant) return Operator + " " + MainSignal.TextVisual+" ";
+                return Operator + " " + MainSignal.TextVisual.Split('[')[0]+string.Format("[{0}]",Offset) + " ";
+                /*
                 if (Operator == null) return MainSignal.TextVisual;
-                else return string.Format(" {0} {1}", Operator, MainSignal.TextVisual);
+                else return string.Format(" {0} {1}", Operator, MainSignal.TextVisual);*/
 
             }
         }
 
-
-       
         public string OperatorSelected { get; set; }
 
-      
-        private string _operator;
+
+        private string _operator = "";
         
         public string Operator
         {
