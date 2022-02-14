@@ -39,17 +39,24 @@
    
 
     <StackPanel>
-        <!-- <dxprg:PropertyGridControl ShowProperties="WithPropertyDefinitions" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowSearchBox="False" ShowCategories="Hidden" ShowToolPanel="False" SelectedObject="{Binding}">
+        <!--<TextBlock x:Name="FinalFormula" TextWrapping="Wrap" Padding="2" Text="{DXBinding FormulaProperty, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" FontSize="14"></TextBlock>-->
+        <dxprg:PropertyGridControl ShowProperties="WithPropertyDefinitions" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowSearchBox="False" ShowCategories="Hidden" ShowToolPanel="False" SelectedObject="{Binding}">
+            <dxprg:PropertyDefinition Path="Value" ShowEditorButtons="True" Visibility="{Binding ValueVisible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <dxprg:PropertyDefinition Path="Length1" ShowEditorButtons="True" Visibility="{Binding Length1Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <dxprg:PropertyDefinition Path="Length2" ShowEditorButtons="True" Visibility="{Binding Length2Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            <dxprg:PropertyDefinition Path="Data" ShowEditorButtons="True" Visibility="{Binding DataVisible,Converter={StaticResource BooleanToVisibilityConverter}}">
+            <!--<dxprg:PropertyDefinition Path="Data" ShowEditorButtons="True" Visibility="{Binding DataVisible,Converter={StaticResource BooleanToVisibilityConverter}}">
                 <dxprg:PropertyDefinition.EditSettings>
                     <dxe:ComboBoxEditSettings  ItemsSource="{Binding dataVariants, Mode=TwoWay}" DisplayMember="Variant" />
                 </dxprg:PropertyDefinition.EditSettings>
+            </dxprg:PropertyDefinition>-->
+            <dxprg:PropertyDefinition  Path="Data1"  ShowEditorButtons="True" IsReadOnly="False" Visibility="{Binding Data1Visible,Converter={StaticResource BooleanToVisibilityConverter}}">
+                <dxprg:PropertyDefinition.EditSettings>
+                    <dxe:ComboBoxEditSettings  ItemsSource="{Binding SignalsString}"  />
+                </dxprg:PropertyDefinition.EditSettings>
             </dxprg:PropertyDefinition>
-        </dxprg:PropertyGridControl>-->
-        <TextBlock x:Name="FinalFormula" TextWrapping="Wrap" Padding="2" Text="{Binding Formula}" TextAlignment="Center" FontSize="14"></TextBlock>
-        <dxprg:PropertyGridControl SelectedPropertyPath="{Binding SelectedProperty, Mode=TwoWay}" x:Name="propertyGrid1" ExpandCategoriesWhenSelectedObjectChanged="True" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowToolPanel="False" ShowSearchBox="False" ShowCategories="Hidden"  SelectedObject="{Binding}" ShowProperties="WithPropertyDefinitions"  Loaded="PropertyGridControl_Loaded" CustomExpand="PropertyGridControl_CustomExpand" HeaderColumnWidth="*" ValueColumnWidth="*">
+        </dxprg:PropertyGridControl>
+
+        <!-- <dxprg:PropertyGridControl SelectedPropertyPath="{Binding SelectedProperty, Mode=TwoWay}" x:Name="propertyGrid1" ExpandCategoriesWhenSelectedObjectChanged="True" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowToolPanel="False" ShowSearchBox="False" ShowCategories="Hidden"  SelectedObject="{Binding}" ShowProperties="WithPropertyDefinitions"  Loaded="PropertyGridControl_Loaded" CustomExpand="PropertyGridControl_CustomExpand" HeaderColumnWidth="*" ValueColumnWidth="*">
             <dxprg:CollectionDefinition HeaderShowMode="OnlyHeader" Path="ValueArgs" Header="Settings" >
                 <dxprg:PropertyDefinition Path="*.BaseValue" Header="Length">
                 </dxprg:PropertyDefinition>
@@ -66,7 +73,7 @@
                     </dxprg:PropertyDefinition.MenuCustomizations>
                 </dxprg:PropertyDefinition>
             </dxprg:CollectionDefinition>
-        </dxprg:PropertyGridControl>
+        </dxprg:PropertyGridControl> -->
         <dx:SimpleButton Content="Save" Padding="2,0,2,0" Command="{Binding SaveWindowCommand}"/>
     </StackPanel>
 </UserControl>

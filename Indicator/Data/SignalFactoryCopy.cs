@@ -13,36 +13,6 @@ namespace Indicator.Data
 {
 
     /// <summary>
-    /// То, чего нет сейчас в CORE
-    /// А именно числового значения в качестве Дочернего обьекта
-    /// То есть 0.5 * Close [0]. Вот именно 0.5 
-    /// </summary>
-    [DataContract]
-    public class SignalValueConstant : Signal
-    {
-        readonly float _value;
-
-        public SignalValueConstant(float value, SymbolId symId) : base("constant", symId, SignalTypes.BaseValuable, null)
-        {
-            _value = value;
-        }
-
-        public override float[] CalculateValues(SimulationSettings sim, GeneratorVariables genVars)
-        {
-            { // check cache
-                var r = base.CalculateValues(sim, genVars);
-                if (r != null) return r;
-            }
-
-            return Enumerable.Repeat(_value, genVars.Closes[SymbolId].Length).ToArray();
-        }
-
-        public override string GetCode(CodeType type)
-        {
-            return _value.ToString(CultureInfo.InvariantCulture);
-        }
-    }
-    /// <summary>
     /// Скопировал класс и метод из SignalFactory
     /// Потому что именно метод basesignals в сборке trader tool box 
     /// метод getbasesignals не работает!
@@ -2766,6 +2736,7 @@ namespace Indicator.Data
                         }
                 }
 
+                /*
                 // ratio signals (for market 2/3/N)
                 if (marketNumber > 1)
                 {
@@ -2804,7 +2775,7 @@ namespace Indicator.Data
                             sR.AddChild(srs[j]);
                             SS.Add(sR);
                         }
-                }
+                }*/
 
                 // final addition into list
                 int visualOrderUpdaterMask = 0;

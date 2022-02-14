@@ -168,6 +168,7 @@ namespace Indicator.ViewModels
         /// </summary>
         public async void QuikTest()
         {
+            /*
             #region ТЕСТОВЫЙ КОД ДЛЯ ТЕСТИРОВАНИЯ ТЕСТОВОЙ СТРАТЕГИИ
             // На текущий момент она не запускается, потому что Signal Parametric был рассчитан
             // всего на два обьекта внутри себя с Offset
@@ -249,7 +250,10 @@ namespace Indicator.ViewModels
             catch (Exception ex)
             { ThemedMessageBox.Show(ex.ToString()); }
             #endregion
-        }
+      
+            */
+          }
+
 
         /// <summary>
         /// Код не дописан. Разбор таблицы на сохранение внутрь обьекта Signal Parametric
@@ -273,7 +277,7 @@ namespace Indicator.ViewModels
                 }
 
                 List<Signal> sumsignals = new List<Signal>();
-                SignalValueArithmetic summingALLFORMULA = new SignalValueArithmetic("sumFormula",symbolId,SignalValueArithmetic.Operation.Sum);
+                SignalValueArithmetic summingALLFORMULA;//= new SignalValueArithmetic("sumFormula",symbolId,SignalValueArithmetic.Operation.Sum);
 
                 //список +/- для одной строки
                 //поскольку мы не можем смешивать + и - в одном SignalValueArithmetic

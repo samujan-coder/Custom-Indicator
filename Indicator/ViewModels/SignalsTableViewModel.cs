@@ -10,6 +10,7 @@ using DevExpress.Xpf.Core;
 using Indicator.Data;
 using System.Linq;
 using System.Diagnostics;
+using TradersToolbox.Core;
 
 namespace Indicator.ViewModels
 {
@@ -163,7 +164,7 @@ namespace Indicator.ViewModels
                     Debug.WriteLine("DONE {0} {1}", s.Key, foundSignal.Text);
                 }
             });
-            
+            AllSignals =  AllSignals.OrderBy(s => s.Text).ToList();
 
         }
 
@@ -241,19 +242,26 @@ namespace Indicator.ViewModels
 
         public void Edit()
         {
-            if (SelectedCustomRuleSignal.MainSignal.Args == null)
-            {
-                ThemedMessageBox.Show("No Parameters for this Signal");
-                return;
-            }
-            if (SelectedCustomRuleSignal.MainSignal.Args.Count == 0)
-            {
-                ThemedMessageBox.Show("No Parameters for this Signal");
-                return;
-            }
+            var iscostant = SelectedCustomRuleSignal.MainSignal is SignalValueConstant;
             var propertygrid = new PropertyGridViewModel(SelectedCustomRuleSignal) { AllSignals = AllSignals };
-
-            WindowService.Show("PropertyGrid", propertygrid);
+            
+            if (iscostant)
+            {
+                WindowService.Show("PropertyGrid", propertygrid);
+                return;
+            }
+            else if (SelectedCustomRuleSignal.MainSignal.Args == null  )
+            {
+                ThemedMessageBox.Show("No Parameters for this Signal");
+                return;
+            }
+            else if (SelectedCustomRuleSignal.MainSignal.Args.Count == 0 )
+            {
+                ThemedMessageBox.Show("No Parameters for this Signal");
+                return;
+            }
+  
+             WindowService.Show("PropertyGrid", propertygrid);
 
 
 

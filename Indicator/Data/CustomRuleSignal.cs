@@ -67,6 +67,7 @@ namespace Indicator.Resource
 
                 return _mainSignal;
             }
+            set { _mainSignal = value; }
            
         }
 
@@ -119,6 +120,7 @@ namespace Indicator.Resource
         public void UpdateMainSignal()
         {
             OnPropertyChanged(nameof(MainSignal));
+            
         }
 
 

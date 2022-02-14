@@ -26,8 +26,8 @@ namespace Indicator.Views
         }
         private void PropertyGridControl_Loaded(object sender, RoutedEventArgs e)
         {
-            propertyGrid1.Expand("ValueArgs");
-            propertyGrid1.Expand("ChildSignals");
+            //propertyGrid1.Expand("ValueArgs");
+            //propertyGrid1.Expand("ChildSignals");
         }
         private void PropertyGridControl_CustomExpand(object sender, DevExpress.Xpf.PropertyGrid.CustomExpandEventArgs args)
         {
