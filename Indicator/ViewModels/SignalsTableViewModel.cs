@@ -103,7 +103,7 @@ namespace Indicator.ViewModels
         public NotifyObservableCollection<ExtraSignal> ExtraSignals { get; set; }
         public static SignalsTableViewModel Create()
         {
-            return ViewModelSource.Create(() => new SignalsTableViewModel());
+            return ViewModelSource.Create(() => new SignalsTableViewModel(false));
         }
 
         public CustomRuleSignal SelectedCustomRuleSignal { get; set; }
@@ -120,17 +120,39 @@ namespace Indicator.ViewModels
         /// Номер таблицы в MainView
         /// Это нужно для правильного построения формулы и десериализации
         /// </summary>
-        public string TableNumber;
+        public string TableNumber ;
         public virtual object Parameter
         {
             get => TableNumber; set
             {
+                if (TableNumber== null && !Loader)
+                    Messenger.Default.Register<SignalsTableMessage>(this, OnSignalsTableMessage);
+
                 TableNumber = (string)value;
                 // Когда мы получаем понимание, какого номера эта таблица
                 // отправяем новые данные 
                 SendUpdateMessage();
 
             }
+        }
+
+        private void OnSignalsTableMessage(SignalsTableMessage signalstable)
+        {
+            if (!signalstable.Loading ) return;
+            if (TableNumber != signalstable.SignalsTable.Parameter) return;
+            else
+            {
+                //временно 
+                signalstable.SignalsTable.CustomRuleSignals.ForEach(c =>
+                {
+                    c.AllSignals = this.AllSignals;
+                    c.SelectedMainSignal = c.MainSignal.Key;
+                });
+                
+                CustomRuleSignals = signalstable.SignalsTable.CustomRuleSignals;
+                SubscribeNotificationsAndUpdate(CustomRuleSignals);
+            }
+            
         }
 
         /// <summary>
@@ -183,11 +205,23 @@ namespace Indicator.ViewModels
         /// </summary>
         private void SendUpdateMessage()
         {
-            Messenger.Default.Send(new SignalsTableMessage(this));
+            //не загрузка 
+            if (!Loader)
+            {
+                Messenger.Default.Send(new SignalsTableMessage(this));
+            }
         }
 
-        public SignalsTableViewModel()
+        public bool Loader { get; set; }
+        public SignalsTableViewModel(bool load = false)
         {
+            Loader = load;
+            if (Loader) 
+            {
+                CustomRuleSignals = new NotifyObservableCollection<CustomRuleSignal>();
+                return;
+            }
+
             GenerateSignals();
 
             if (CustomRuleSignals == null)
@@ -203,22 +237,24 @@ namespace Indicator.ViewModels
                  };
             }
 
-            CustomRuleSignals.ForEach(s =>
-            {
-                s.PropertyChanged += S_PropertyChanged;
-                // not working, no update :(
-                // s.MainSignal.PropertyChanged += S_PropertyChanged;
-            });
-
-            // В ином случае нужна какая то загрузка и сериализация 
-            CustomRuleSignals.CollectionChanged += (sender, e) =>
-            {
-                SendUpdateMessage();
-            };
+            SubscribeNotificationsAndUpdate(CustomRuleSignals);
             //Чтобы определить, что есть что. 
             //Для инициализации
+            
+        }
+
+        /// <summary>
+        /// Подписка и отправка свежих данных 
+        /// </summary>
+        /// <param name="_customRuleSignals"></param>
+        public void SubscribeNotificationsAndUpdate(NotifyObservableCollection<CustomRuleSignal> _customRuleSignals)
+        {
+            _customRuleSignals.ForEach(s => { s.PropertyChanged += S_PropertyChanged;});
+            // В ином случае нужна какая то загрузка и сериализация 
+            _customRuleSignals.CollectionChanged += (sender, e) => {SendUpdateMessage();};
             SendUpdateMessage();
         }
+
 
         private void S_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
@@ -237,7 +273,9 @@ namespace Indicator.ViewModels
         //todo удалять не последний элемент, а тот, который нажат. 
         public void Delete()
         {
-            CustomRuleSignals.RemoveAt(CustomRuleSignals.Count - 1);
+            CustomRuleSignals.Remove(SelectedCustomRuleSignal);
+            CustomRuleSignals.FirstOrDefault().Operator = "";
+            // CustomRuleSignals.RemoveAt(CustomRuleSignals.Count - 1);
         }
 
         public void Edit()

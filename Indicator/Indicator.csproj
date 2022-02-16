@@ -19,7 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="TradersToolbox.Core">
-      <HintPath>..\TradersToolbox.Core.dll</HintPath>
+      <HintPath>..\..\..\..\Users\samujan\Downloads\TradersToolbox.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -13,6 +13,11 @@ namespace Indicator.Data
         {
             SignalsTable = _signalTableViewModel;
         }
+        /// <summary>
+        /// false - передача обновлений
+        /// true - разовая загрузка 
+        /// </summary>
+        public bool Loading { get; set; }
 
     }
 }

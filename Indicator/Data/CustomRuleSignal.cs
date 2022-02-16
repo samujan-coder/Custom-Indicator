@@ -15,12 +15,38 @@ namespace Indicator.Resource
         /// </summary>
         public CustomRuleSignal() { }
 
+        public IEnumerable<Signal> AllSignals;
+        
+        /// <summary>
+        /// Loading 
+        /// ОФФСЕТ вообще не сделан! 
+        /// </summary>
+        /// <param name="first"></param>
+        /// <param name="operation"></param>
+        /// <param name="signal"></param>
+        public CustomRuleSignal( bool first, SignalValueArithmetic.Operation operation, Signal signal, int offset)
+        {
+            Offset = offset;
 
-        public IEnumerable<Signal> _allsignals;
+            if (operation == SignalValueArithmetic.Operation.Sum) Operator = "+";
+            if (operation == SignalValueArithmetic.Operation.Diff) Operator = "-";
+            if (operation == SignalValueArithmetic.Operation.Div) Operator = "/";
+            if (operation == SignalValueArithmetic.Operation.Mult) Operator = "*";
+             
+            MainSignal = signal;
+            if (first) Operator = "";
+        }
 
+        /// <summary>
+        /// Creating from zero
+        /// </summary>
+        /// <param name="signals"></param>
+        /// <param name="operator1"></param>
+        /// <param name="mainsignal"></param>
+        /// <param name="offset"></param>
         public CustomRuleSignal(IEnumerable<Signal> signals, string operator1, string mainsignal, int offset)
         {
-            _allsignals = signals;
+            AllSignals = signals;
             SelectedMainSignal = mainsignal;
             Operator = operator1 == null ? "" : operator1;
             //MainSignal=mainsignal;
@@ -41,6 +67,22 @@ namespace Indicator.Resource
 
             }
         }
+
+        public SignalValueArithmetic.Operation SvaOperation
+        {
+            get
+            {
+
+                if (Operator == "+") return SignalValueArithmetic.Operation.Sum;
+                if (Operator == "-") return SignalValueArithmetic.Operation.Diff;
+                if (Operator == "/") return SignalValueArithmetic.Operation.Div;
+                if (Operator == "*") return SignalValueArithmetic.Operation.Mult;
+
+                //если никакой нет, ставим + 
+                return SignalValueArithmetic.Operation.Sum;
+            }
+        }
+        
 
         public string OperatorSelected { get; set; }
 
@@ -63,7 +105,7 @@ namespace Indicator.Resource
             get
             {
                 if (_mainSignal == null)
-                _mainSignal = _allsignals.FirstOrDefault(s => s.Key == SelectedMainSignal);
+                _mainSignal = AllSignals.FirstOrDefault(s => s.Key == SelectedMainSignal);
 
                 return _mainSignal;
             }
@@ -79,7 +121,7 @@ namespace Indicator.Resource
             set
             {
                 _selectedmainsignal = value;
-                _mainSignal = _allsignals.FirstOrDefault(s => s.Key == _selectedmainsignal);
+                _mainSignal = AllSignals.FirstOrDefault(s => s.Key == _selectedmainsignal);
                 OnPropertyChanged(nameof(SelectedMainSignal));
             }
         }
@@ -111,9 +153,6 @@ namespace Indicator.Resource
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        // для чтения из файла и сериализации 
-        public static List<CustomRuleSignal> ReadFromFile(string fileName) { return null; }
-        public static void WriteToFile(IEnumerable<CustomRuleSignal> list, string fileName) { }
 
         public int SelectedValueOperator { get; set; }
 

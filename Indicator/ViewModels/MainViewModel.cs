@@ -14,6 +14,7 @@ using DevExpress.Mvvm.Native;
 using TradersToolbox.Core;
 using System.Threading;
 using DevExpress.Xpf.Core;
+using System.Threading.Tasks;
 
 /* -------- About ----------*/
 // ToDo. Добавить, какие типы индикаторов вообще поддерживаются сейчас
@@ -39,8 +40,9 @@ namespace Indicator.ViewModels
 
         /// <summary>
         /// Набор таблиц с сигналами внутри
+        /// На текущий момент рассчитана только на работу с двумя
         /// </summary>
-        private List<SignalsTableViewModel> SignalsTables = new List<SignalsTableViewModel>() { null, null, null };
+        private List<SignalsTableViewModel> SignalsTables = new List<SignalsTableViewModel>() { null, null };
 
         /// <summary>
         /// LEFT FORMULA [0]
@@ -49,7 +51,7 @@ namespace Indicator.ViewModels
         /// </summary>
         private string[] _allFormulas = new string[] { "", "", "" };
 
-        private bool _ruleOrValueBool;
+        private bool _ruleOrValueBool = true;
         public bool RuleOrValueBool
         {
             get => _ruleOrValueBool; set
@@ -62,7 +64,7 @@ namespace Indicator.ViewModels
         public virtual string ReceivedMessage { get; protected set; }
         public SignalParametric AllFormula { get; set; }
 
-        private decimal _value = (decimal) 1.9;
+        private decimal _value = (decimal)1.9;
         public decimal Value
         {
             get => _value; set
@@ -98,7 +100,7 @@ namespace Indicator.ViewModels
 
             //каждый сигнал должен иметь в себе Offset (временно)
 
-           
+
 
             var argList = new List<SignalArg>()
             {
@@ -120,10 +122,14 @@ namespace Indicator.ViewModels
 
         private void OnSignalsTableMessage(SignalsTableMessage signalsTablemessage)
         {
+            if(signalsTablemessage.Loading == true)
+            {
+                return;
+            }
             var signalstable = signalsTablemessage.SignalsTable;
             if (signalstable.TableNumber != null)
             {
-                int i = Int32.Parse(signalstable.TableNumber);
+                int i = int.Parse(signalstable.TableNumber);
                 SignalsTables[i] = signalstable;
                 UpdateFormula(false);
             }
@@ -131,7 +137,7 @@ namespace Indicator.ViewModels
 
         /// <summary>
         /// how much signals tables deploy (copied)
-        /// </summary>
+        /// </summary> 
         private int nymberofsignaltables = 2;
 
         /// <summary>
@@ -142,10 +148,10 @@ namespace Indicator.ViewModels
         {
             if (!onlycondition) //update all formulas
             {
-                for (int i = 0; i <= nymberofsignaltables; i++)
+                for (int i = 0; i < nymberofsignaltables; i++)
                 {
                     if (SignalsTables[i] != null)
-                    {   _allFormulas[i] = SignalsTables[i].AllTextForAllSignals; }
+                    { _allFormulas[i] = SignalsTables[i].AllTextForAllSignals; }
                 }
 
             }
@@ -168,8 +174,9 @@ namespace Indicator.ViewModels
         /// </summary>
         public async void QuikTest()
         {
-            /*
+            
             #region ТЕСТОВЫЙ КОД ДЛЯ ТЕСТИРОВАНИЯ ТЕСТОВОЙ СТРАТЕГИИ
+            /*
             // На текущий момент она не запускается, потому что Signal Parametric был рассчитан
             // всего на два обьекта внутри себя с Offset
             // Сейчас Offset переделывается и вместо родительского объекта, теперь дочерний будет хранить OFFSET
@@ -202,8 +209,6 @@ namespace Indicator.ViewModels
 
 
             // -------  левая часть формулы (вложенность)----------//
-            SignalValueArithmetic sumLeft = new SignalValueArithmetic(key, symbolId, SignalValueArithmetic.Operation.Sum);
-
             SignalValueRAW closeLeft = new SignalValueRAW("Close", symbolId) { Args = new List<SignalArg>() { arg1OFFSET } }; ; // offset 0 - наверное ничего не надо передавать.
             SignalValueRSI rsiLeft = new SignalValueRSI(key, symbolId, new SignalValueRAW("Close", symbolId), new SignalArg("Length", SignalArg.ArgType.Static, 1, 1000, 44));
 
@@ -248,138 +253,76 @@ namespace Indicator.ViewModels
                 else ThemedMessageBox.Show("Тест прошел успешно");
             }
             catch (Exception ex)
-            { ThemedMessageBox.Show(ex.ToString()); }
+            { ThemedMessageBox.Show(ex.ToString()); }*/
             #endregion
       
-            */
-          }
+            
+        }
 
 
         /// <summary>
         /// Код не дописан. Разбор таблицы на сохранение внутрь обьекта Signal Parametric
         /// </summary>
-        public void Save()
+        public async void Save()
         {
-            //для каждой таблицы, всего их две 
-            //сначала работаем для левой, потом для правой 
-            SignalsTables.ForEach(signaltable =>
+            await Task.Run(() =>
             {
-
-
-
-
-                var signals = signaltable.CustomRuleSignals;
-
-                // должна быть где то проверка на то, что у нас объект может состоять просто тупо из одного элемента
-                if( signals.Count==1)
+                SignalsTables.ForEach(signaltable =>
                 {
-
-                }
-
-                List<Signal> sumsignals = new List<Signal>();
-                SignalValueArithmetic summingALLFORMULA;//= new SignalValueArithmetic("sumFormula",symbolId,SignalValueArithmetic.Operation.Sum);
-
-                //список +/- для одной строки
-                //поскольку мы не можем смешивать + и - в одном SignalValueArithmetic
-                // List<SignalValueArithmetic> _sumMinusList = new List<SignalValueArithmetic>();
-
-                //список из складывающих или вычитывающих 
-                Dictionary<string, SignalValueArithmetic> _sumMinusList = new Dictionary<string, SignalValueArithmetic>();
-
-                //список умножителей для одной строки
-                List<SignalValueArithmetic> multipliers = new List<SignalValueArithmetic>();
-                
-
-                bool collectingmultipliers = false;
-
-                //список индексов из которых складываем умножитель
-                List<int> numbersformultipliers = new List<int>(); 
-
-                for (int i = 0; i <= signals.Count - 1; i++)
-                {
-
-                    if (signals[i + 1].Operator == "/" || signals[i + 1].Operator == "*")
-                    { // условие для создания внутреннего SignalValueAripmetic с условиями умножения или деления 
-                        collectingmultipliers = true;
-                      
-
-  
-                    }
-                    else
+                    SignalValueArithmetic sva = new SignalValueArithmetic("formula", symbolId);
+                    List<SignalArg> _args = new List<SignalArg>();
+                    signaltable.CustomRuleSignals.ForEach(customSignal =>
                     {
-                     
-                        if(collectingmultipliers = true)
-                        {
-                            //это означает, что прекратился сбор умножителей
-                            //то есть из прошлых переменных нужно собрать один умножитель
-
-                            collectingmultipliers = false;
-                        }
-                        else
-                        {
-                            // это означает, что умножителей нет, обычная формула 
-
-                            
-                            string last = ""; // если никогда не создавался, то оператор будет ""
-                            if(_sumMinusList.Count!=0)
-                               last = _sumMinusList.Keys.Last(); // если создавался, то выведем 
-
-                            if (signals[i + 1].Operator == "+")
-                            { //должны проверить содержит ли последний элемент
-                              //_sumMinusList тот же знак, 
-                              // что и + 
-                                if (last != "+")
-                                { // не равен, либо пусто....
-                                  // значит должны создать новый
-
-                                }
-                                else
-                                { // с таким же знаком существует
-                                  // значит добавляем обьект в него 
-
-                                }
-
-                            }
-                            else if (signals[i + 1].Operator == "-")
-                            {
-                                //должны проверить содержит ли последний элемент
-                                //_sumMinusList тот же знак, 
-                                // что и + 
-
-                                if (last != "-")
-                                { // не равен, либо пусто....
-                                  // значит должны создать новый
-
-                                }
-                                else
-                                { // с таким же знаком существует
-                                  // значит добавляем обьект в него 
-
-                                }
-
-                            }
-
-                        } 
-                       
-                    }
+                        sva.AddChildWithOperation(customSignal.MainSignal, customSignal.SvaOperation);
+                        _args.Add(new SignalArg("Offset", SignalArg.ArgType.Static, 0, 1000, customSignal.Offset));
+                    });
+                    sva.Args = _args;
+                    AllFormula.AddChild(sva);
                 }
+                );
 
-                // в конце цикла должен быть создан SignalValueAripmetic 
-
-            }
-            );
-
-            // Обьект SignalParametric готов к сериализации
-            DataContractSerializer serializer = new DataContractSerializer(typeof(SignalParametric));
-            using (FileStream fs = new FileStream("SignalParametric.xml", FileMode.OpenOrCreate))
-            {
-                //formatter.Serialize(fs, _customRuleSignalsMessage.CustomRuleSignals);
-                serializer.WriteObject(fs, AllFormula);
-                Debug.WriteLine("Объект сериализован");
-            };
+                // Обьект SignalParametric готов к сериализации
+                DataContractSerializer serializer = new DataContractSerializer(typeof(SignalParametric));
+                using (FileStream fs = new FileStream("SignalParametric.xml", FileMode.Create))
+                {
+                    //formatter.Serialize(fs, _customRuleSignalsMessage.CustomRuleSignals);
+                    serializer.WriteObject(fs, AllFormula);
+                    Debug.WriteLine("Объект сериализован");
+                };
+            });
 
         }
 
-    }
+        public void Load()
+        {
+            DataContractSerializer serializer = new DataContractSerializer(typeof(SignalParametric));
+            SignalParametric loaded;
+            using (FileStream fs = new FileStream("SignalParametric.xml", FileMode.Open))
+            {
+                //formatter.Serialize(fs, _customRuleSignalsMessage.CustomRuleSignals);
+                 loaded = serializer.ReadObject(fs) as SignalParametric;
+                //  serializer.WriteObject(fs, AllFormula);
+                Debug.WriteLine("Объект десериализован");
+            };
+            //два SVA на выходе из SP
+            for (int x = 0; x < loaded.Children.Count; x++)
+            {
+                var signalstable = new SignalsTableViewModel(true) { Parameter = x.ToString() };// обозначаем таблицу 
+                var childrensva = (loaded.Children[x] as SignalValueArithmetic);
 
+                var operations = childrensva.Operations;
+           
+                //обрабатываем каждый.
+                for (int y = 0; y < childrensva.Children.Count; y++)
+                {
+                    //нужно заменить свои сигналы на сигналы в списке..... хотя? 
+                    var customrule = new CustomRuleSignal(y==0?true:false, operations==null? SignalValueArithmetic.Operation.Sum : childrensva.Operations[y], childrensva.Children[y],(int)childrensva.Args[y].BaseValue);
+                    signalstable.CustomRuleSignals.Add(customrule);
+                }
+
+                Messenger.Default.Send(new SignalsTableMessage(signalstable) { Loading = true});
+            }
+            // нужно отправить 
+        }
+    }
 }
