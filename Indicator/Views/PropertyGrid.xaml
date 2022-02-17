@@ -42,21 +42,26 @@
         <!--<TextBlock x:Name="FinalFormula" TextWrapping="Wrap" Padding="2" Text="{DXBinding FormulaProperty, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" FontSize="14"></TextBlock>-->
         <dxprg:PropertyGridControl ShowProperties="WithPropertyDefinitions" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowSearchBox="False" ShowCategories="Hidden" ShowToolPanel="False" SelectedObject="{Binding}">
             <dxprg:PropertyDefinition Path="Value" ShowEditorButtons="True" Visibility="{Binding ValueVisible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            <dxprg:PropertyDefinition Path="Length1" ShowEditorButtons="True" Visibility="{Binding Length1Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            <dxprg:PropertyDefinition Path="Length2" ShowEditorButtons="True" Visibility="{Binding Length2Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="LookBack" ShowEditorButtons="True" Visibility="{Binding LookBackVisible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="LookBack1" ShowEditorButtons="True" Visibility="{Binding LookBack1Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="LookBack2" ShowEditorButtons="True" Visibility="{Binding LookBack2Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="LookBack3" ShowEditorButtons="True" Visibility="{Binding LookBack3Visible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="Mult" ShowEditorButtons="True" Visibility="{Binding MultVisible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="Step" ShowEditorButtons="True" Visibility="{Binding StepVisible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <dxprg:PropertyDefinition Path="Limit" ShowEditorButtons="True" Visibility="{Binding LimitVisible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <!--<dxprg:PropertyDefinition Path="Data" ShowEditorButtons="True" Visibility="{Binding DataVisible,Converter={StaticResource BooleanToVisibilityConverter}}">
                 <dxprg:PropertyDefinition.EditSettings>
                     <dxe:ComboBoxEditSettings  ItemsSource="{Binding dataVariants, Mode=TwoWay}" DisplayMember="Variant" />
                 </dxprg:PropertyDefinition.EditSettings>
             </dxprg:PropertyDefinition>-->
-            <dxprg:PropertyDefinition  Path="Data1"  ShowEditorButtons="True" IsReadOnly="False" Visibility="{Binding Data1Visible,Converter={StaticResource BooleanToVisibilityConverter}}">
+            <dxprg:PropertyDefinition  Path="Data"  ShowEditorButtons="True" IsReadOnly="False" Visibility="{Binding DataVisible,Converter={StaticResource BooleanToVisibilityConverter}}">
                 <dxprg:PropertyDefinition.EditSettings>
                     <dxe:ComboBoxEditSettings  ItemsSource="{Binding SignalsString}"  />
                 </dxprg:PropertyDefinition.EditSettings>
             </dxprg:PropertyDefinition>
         </dxprg:PropertyGridControl>
 
-        <!-- <dxprg:PropertyGridControl SelectedPropertyPath="{Binding SelectedProperty, Mode=TwoWay}" x:Name="propertyGrid1" ExpandCategoriesWhenSelectedObjectChanged="True" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowToolPanel="False" ShowSearchBox="False" ShowCategories="Hidden"  SelectedObject="{Binding}" ShowProperties="WithPropertyDefinitions"  Loaded="PropertyGridControl_Loaded" CustomExpand="PropertyGridControl_CustomExpand" HeaderColumnWidth="*" ValueColumnWidth="*">
+        <!--<dxprg:PropertyGridControl SelectedPropertyPath="{Binding SelectedProperty, Mode=TwoWay}" x:Name="propertyGrid1" ExpandCategoriesWhenSelectedObjectChanged="True" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowToolPanel="False" ShowSearchBox="False" ShowCategories="Hidden"  SelectedObject="{Binding}" ShowProperties="WithPropertyDefinitions"  Loaded="PropertyGridControl_Loaded" CustomExpand="PropertyGridControl_CustomExpand" HeaderColumnWidth="*" ValueColumnWidth="*">
             <dxprg:CollectionDefinition HeaderShowMode="OnlyHeader" Path="ValueArgs" Header="Settings" >
                 <dxprg:PropertyDefinition Path="*.BaseValue" Header="Length">
                 </dxprg:PropertyDefinition>

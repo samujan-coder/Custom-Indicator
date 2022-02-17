@@ -97,10 +97,7 @@ namespace Indicator.ViewModels
 
         public virtual NotifyObservableCollection<CustomRuleSignal> CustomRuleSignals { get; set; }
 
-        /// <summary>
-        /// Для таблицы настроек, чтобы находу можно было менять KEY 
-        /// </summary>
-        public NotifyObservableCollection<ExtraSignal> ExtraSignals { get; set; }
+
         public static SignalsTableViewModel Create()
         {
             return ViewModelSource.Create(() => new SignalsTableViewModel(false));
@@ -162,13 +159,15 @@ namespace Indicator.ViewModels
         private void GenerateSignals()
         {
 
-            var vixid = new SymbolId("@Vix", "1D", 0, false);
-            var seclist = new List<SymbolId>() { new SymbolId("@Vix", "1D", 0, false) };
+           // var vixid = new SymbolId("@Vix", "1D", 0, false);
+            var es = new SymbolId("@ES", "1D", 0, false);
+            //var seclist = new List<SymbolId>() { new SymbolId("@Vix", "1D", 0, false) };
+            var seclist = new List<SymbolId>() { new SymbolId("@ES", "1D", 0, false)};
 
-            AllSignals.Add(new SignalValueConstant((float)0.5, SymbolId.Vix) { Text = "Value" });
+            AllSignals.Add(new SignalValueConstant((float)0.5, es) { Text = "Value", MarketNumber =1 });
 
             //позже добавить в этот список число, чтобы реализовать формулу 0.5 * Close[0]
-            var signalsFromCore = SignalFactoryCopy.GetBaseSignals(seclist).Where(s => s.Type == Signal.SignalTypes.BaseValuable);
+            var signalsFromCore = SignalsFactory.GetBaseSignals(seclist).Where(s => s.Type == Signal.SignalTypes.BaseValuable);
             SignalsViewable.ForEach(s =>
             {
                 var foundSignal = signalsFromCore.FirstOrDefault(s1 => s1.Key == s.Key);
@@ -273,6 +272,11 @@ namespace Indicator.ViewModels
         //todo удалять не последний элемент, а тот, который нажат. 
         public void Delete()
         {
+            if (CustomRuleSignals.Count == 1) 
+            { 
+                ThemedMessageBox.Show("Can't delete last item");
+                return;
+            }
             CustomRuleSignals.Remove(SelectedCustomRuleSignal);
             CustomRuleSignals.FirstOrDefault().Operator = "";
             // CustomRuleSignals.RemoveAt(CustomRuleSignals.Count - 1);
@@ -283,7 +287,7 @@ namespace Indicator.ViewModels
             var iscostant = SelectedCustomRuleSignal.MainSignal is SignalValueConstant;
             var propertygrid = new PropertyGridViewModel(SelectedCustomRuleSignal) { AllSignals = AllSignals };
             
-            if (iscostant)
+            /*if (iscostant)
             {
                 WindowService.Show("PropertyGrid", propertygrid);
                 return;
@@ -297,7 +301,7 @@ namespace Indicator.ViewModels
             {
                 ThemedMessageBox.Show("No Parameters for this Signal");
                 return;
-            }
+            }*/
   
              WindowService.Show("PropertyGrid", propertygrid);
 

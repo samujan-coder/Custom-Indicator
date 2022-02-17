@@ -100,8 +100,6 @@ namespace Indicator.ViewModels
 
             //каждый сигнал должен иметь в себе Offset (временно)
 
-
-
             var argList = new List<SignalArg>()
             {
                 new SignalArg(SignalParametric.rule1_Base_Offset_key,SignalArg.ArgType.Static,0,1000000,0),
@@ -174,65 +172,9 @@ namespace Indicator.ViewModels
         /// </summary>
         public async void QuikTest()
         {
-            
-            #region ТЕСТОВЫЙ КОД ДЛЯ ТЕСТИРОВАНИЯ ТЕСТОВОЙ СТРАТЕГИИ
-            /*
-            // На текущий момент она не запускается, потому что Signal Parametric был рассчитан
-            // всего на два обьекта внутри себя с Offset
-            // Сейчас Offset переделывается и вместо родительского объекта, теперь дочерний будет хранить OFFSET
-            // Тестовая формула
 
-            // CLOSE[0] + RSI (CLOSE, 44) [0] > Open [0] - RSI (OPEN, 2)[0];
-
-            //TODO Каждый сигнал должен иметь в себе аргументы 
-            // для успешного запуска
-            var key = "test";
-
-            // [0] - беру везде по нулям 
-            // основная формула
-
-            var arg1OFFSET = new SignalArg(SignalParametric.rule1_Base_Offset_key, SignalArg.ArgType.Static, 0, 1000000, 0);
-            var arg2OFFSET = new SignalArg(SignalParametric.rule2_Base_Offset_key, SignalArg.ArgType.Static, 0, 1000000, 0);
-
-            SignalParametric allFormula = new SignalParametric(key, symbolId, Signal.SignalTypes.CustomIndicator, null)
-            {
-                // для каждого объекта внутри SignalParametric, а в нашем случае это будет SignalValueAripmetic
-                // нужен каждый свой аргумент offset, даже если он нулевой!
-                // поэтому мы сразу добавляем 
-                Args = new List<SignalArg>(),
-                CrossOp = 0, // 0 - одно условие, 1  - два
-                Rule1_Mode = SignalParametric.RuleMode.Signal,
-                Rule1_Operation = ">",
-                MarketNumber = 1,// используем дефольное значение инструмента и дочерние тоже будут использовать дефолтное
-                ActiveForEntry = true,
-            };
-
-
-            // -------  левая часть формулы (вложенность)----------//
-            SignalValueRAW closeLeft = new SignalValueRAW("Close", symbolId) { Args = new List<SignalArg>() { arg1OFFSET } }; ; // offset 0 - наверное ничего не надо передавать.
-            SignalValueRSI rsiLeft = new SignalValueRSI(key, symbolId, new SignalValueRAW("Close", symbolId), new SignalArg("Length", SignalArg.ArgType.Static, 1, 1000, 44));
-
-            sumLeft.AddChild(closeLeft);
-            sumLeft.AddChild(rsiLeft);
-
-            // ------- правая часть формулы (вложенность) ---------// 
-            SignalValueArithmetic sumRight = new SignalValueArithmetic(key, symbolId, SignalValueArithmetic.Operation.Diff)
-            { Args = new List<SignalArg>() { arg2OFFSET } };
-
-            SignalValueRAW openRight = new SignalValueRAW("Open", symbolId); // offset 0 - наверное ничего не надо передавать.
-            SignalValueRSI rsiRight = new SignalValueRSI(key, symbolId, new SignalValueRAW("Open", symbolId), new SignalArg("Length", SignalArg.ArgType.Static, 1, 1000, 2));
-
-            sumRight.AddChild(openRight);
-            sumRight.AddChild(rsiRight);
-
-            // ----- основную реализируем ----// 
-            allFormula.AddChild(sumLeft);
-            allFormula.Args.Add(arg1OFFSET);// добавляем для левой части OFFSET ключ! Необходимо для успешного запуска!
-
-            allFormula.AddChild(sumRight);
-            allFormula.Args.Add(arg2OFFSET);// добавляем для правой части OFFSET ключ! Необходимо для успешного запуска!
-
-            List<Signal> testsignals = new List<Signal>() { allFormula };
+            CreateParametric();
+            List<Signal> testsignals = new List<Signal>() { AllFormula };
 
 
             SimulationSettings sim1 = new SimulationSettings(testsignals,
@@ -253,13 +195,31 @@ namespace Indicator.ViewModels
                 else ThemedMessageBox.Show("Тест прошел успешно");
             }
             catch (Exception ex)
-            { ThemedMessageBox.Show(ex.ToString()); }*/
-            #endregion
+            { ThemedMessageBox.Show(ex.ToString()); }
+           
       
             
         }
 
+        public void CreateParametric()
+        {
+            if (AllFormula.Children != null)
+                AllFormula.Children.Clear();
 
+            SignalsTables.ForEach(signaltable =>
+            {
+                SignalValueArithmetic sva = new SignalValueArithmetic("formula", symbolId);
+                List<SignalArg> _args = new List<SignalArg>();
+                signaltable.CustomRuleSignals.ForEach(customSignal =>
+                {
+                    sva.AddChildWithOperation(customSignal.MainSignal, customSignal.SvaOperation);
+                    _args.Add(new SignalArg("Offset", SignalArg.ArgType.Static, 0, 1000, customSignal.Offset));
+                });
+                sva.Args = _args;
+                AllFormula.AddChild(sva);
+            }
+            );
+        }
         /// <summary>
         /// Код не дописан. Разбор таблицы на сохранение внутрь обьекта Signal Parametric
         /// </summary>
@@ -267,19 +227,7 @@ namespace Indicator.ViewModels
         {
             await Task.Run(() =>
             {
-                SignalsTables.ForEach(signaltable =>
-                {
-                    SignalValueArithmetic sva = new SignalValueArithmetic("formula", symbolId);
-                    List<SignalArg> _args = new List<SignalArg>();
-                    signaltable.CustomRuleSignals.ForEach(customSignal =>
-                    {
-                        sva.AddChildWithOperation(customSignal.MainSignal, customSignal.SvaOperation);
-                        _args.Add(new SignalArg("Offset", SignalArg.ArgType.Static, 0, 1000, customSignal.Offset));
-                    });
-                    sva.Args = _args;
-                    AllFormula.AddChild(sva);
-                }
-                );
+                CreateParametric();
 
                 // Обьект SignalParametric готов к сериализации
                 DataContractSerializer serializer = new DataContractSerializer(typeof(SignalParametric));
@@ -289,6 +237,8 @@ namespace Indicator.ViewModels
                     serializer.WriteObject(fs, AllFormula);
                     Debug.WriteLine("Объект сериализован");
                 };
+
+                
             });
 
         }
