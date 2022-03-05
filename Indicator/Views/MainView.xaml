@@ -7,10 +7,9 @@
     xmlns:dxmvvm="http://schemas.devexpress.com/winfx/2008/xaml/mvvm" 
     xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
     xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core"
-    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
     xmlns:ViewModels="clr-namespace:Indicator.ViewModels"
-    xmlns:views="clr-namespace:Indicator.Views"
-    mc:Ignorable="d" d:DesignHeight="300" d:DesignWidth="300"
+    xmlns:views="clr-namespace:Indicator.Views" 
+    mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="300"
     DataContext="{dxmvvm:ViewModelSource Type={x:Type ViewModels:MainViewModel}}"
     >
     <UserControl.Resources>
@@ -19,11 +18,19 @@
     </UserControl.Resources>
 
     <dxmvvm:Interaction.Behaviors>
+        <dxmvvm:WindowService>
+            <dxmvvm:WindowService.WindowStyle>
+                <Style TargetType="dx:ThemedWindow">
+                    <Setter Property="Width" Value="300" />
+                    <Setter Property="Height" Value="150" />
+                </Style>
+            </dxmvvm:WindowService.WindowStyle>
+        </dxmvvm:WindowService>
         <dx:DXMessageBoxService/>
     </dxmvvm:Interaction.Behaviors>
 
     <StackPanel x:Name="LayoutRoot"  >
-        <TextBlock x:Name="FinalFormula" TextWrapping="Wrap" Padding="2" Text="{Binding Formula, Mode=TwoWay}" TextAlignment="Center" FontSize="14"></TextBlock>
+        <TextBlock x:Name="FinalFormula" TextWrapping="Wrap" Margin="0,0,0,10" Text="{Binding Formula, Mode=TwoWay}" TextAlignment="Center" FontSize="14"></TextBlock>
         <views:SignalsTable  Padding="2" HorizontalAlignment="Center"
           dxmvvm:ViewModelExtensions.Parameter="{Binding DataContext.Parameter1, ElementName=LayoutRoot}"  />
         <Grid Width="239">
@@ -52,8 +59,9 @@
             <dx:SimpleButton Content="quiktest" Padding="2,2,2,2" Width="78" HorizontalAlignment="Right" Command="{Binding QuikTestCommand}"/>
             <dx:SimpleButton Content="save" Padding="3" Width="77" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Command="{Binding SaveCommand}"/>
             <dx:SimpleButton Content="load" Padding="3" Width="77" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Command="{Binding LoadCommand}"/>
+            <dx:SimpleButton Content="Add new" Padding="3" Width="77" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Command="{Binding AddCommand}"/>
+       
         </StackPanel>
-
     </StackPanel>
 
 

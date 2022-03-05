@@ -27,6 +27,7 @@ namespace Indicator.ViewModels
     [POCOViewModel]
     public partial class MainViewModel
     {
+        private string path = "SignalParametrics.xml";
         protected IWindowService WindowService { get { return this.GetService<IWindowService>(); } }
         /// <summary>
         /// номер таблицы для ViewModel
@@ -47,21 +48,14 @@ namespace Indicator.ViewModels
         /// <summary>
         /// LEFT FORMULA [0]
         /// RIGHT FORMULA [1]
-        /// ...LATER 3d condition [2] BETWEEN!
         /// </summary>
         private string[] _allFormulas = new string[] { "", "", "" };
 
+        /*
         private bool _ruleOrValueBool = true;
         public bool RuleOrValueBool
-        {
-            get => _ruleOrValueBool; set
-            {
-                _ruleOrValueBool = value;
-                UpdateFormula();
-            }
-        }
+        { get => _ruleOrValueBool; set {_ruleOrValueBool = value; UpdateFormula();}}*/
         public virtual string Formula { get; set; } = "check";
-        public virtual string ReceivedMessage { get; protected set; }
         public SignalParametric AllFormula { get; set; }
 
         private decimal _value = (decimal)1.9;
@@ -70,7 +64,7 @@ namespace Indicator.ViewModels
             get => _value; set
             {
                 _value = value;
-                UpdateFormula();
+                UpdateNewFormula();
             }
         }
         public string[] opComp { get; } = { "=", "!=", ">", "<", ">=", "<=", /* "Between" */ };
@@ -84,7 +78,7 @@ namespace Indicator.ViewModels
                 {
                     AllFormula.Rule1_Operation = value;
                     _condition = value;
-                    UpdateFormula(true);
+                    UpdateNewFormula(true);
                 }
             }
         }
@@ -100,21 +94,7 @@ namespace Indicator.ViewModels
 
             //каждый сигнал должен иметь в себе Offset (временно)
 
-            var argList = new List<SignalArg>()
-            {
-                new SignalArg(SignalParametric.rule1_Base_Offset_key,SignalArg.ArgType.Static,0,1000000,0),
-                new SignalArg(SignalParametric.rule2_Base_Offset_key,SignalArg.ArgType.Static,0,1000000,0),
-            };
-
-            AllFormula = new SignalParametric("testArtem", symbolId, Signal.SignalTypes.CustomIndicator, null)
-            {
-                Args = argList,
-                CrossOp = 0, // 0 - одно условие, 1  - два 
-                Rule1_Mode = SignalParametric.RuleMode.Signal,
-                Rule1_Operation = ">",
-                MarketNumber = 1,// используем дефольное значение инструмента и дочерние тоже будут использовать дефолтное
-                ActiveForEntry = true,
-            };
+          
 
         }
 
@@ -129,7 +109,7 @@ namespace Indicator.ViewModels
             {
                 int i = int.Parse(signalstable.TableNumber);
                 SignalsTables[i] = signalstable;
-                UpdateFormula(false);
+                UpdateNewFormula(false);
             }
         }
 
@@ -142,7 +122,7 @@ namespace Indicator.ViewModels
         /// Updating Formula Method 
         /// </summary>
         /// <param name="onlycondition"> Update only Condition ">" </param>
-        public void UpdateFormula(bool onlycondition = false)
+        public void UpdateNewFormula(bool onlycondition = false)
         {
             if (!onlycondition) //update all formulas
             {
@@ -153,15 +133,7 @@ namespace Indicator.ViewModels
                 }
 
             }
-
-            if (RuleOrValueBool) //rule 
-            {
-                Formula = string.Format("{0} {2} {1}", _allFormulas[0], _allFormulas[1], AllFormula.Rule1_Operation);
-            }
-            else //value
-            {
-                Formula = string.Format("{0} {2} {1}", _allFormulas[0], Value, AllFormula.Rule1_Operation);
-            }
+            Formula = string.Format("{0} {2} {1}", _allFormulas[0], _allFormulas[1], AllFormula == null ? " " : AllFormula.Rule1_Operation);
 
         }
 
@@ -173,7 +145,7 @@ namespace Indicator.ViewModels
         public async void QuikTest()
         {
 
-            CreateParametric();
+            ConvertTablesToParametric(AllFormula) ;
             List<Signal> testsignals = new List<Signal>() { AllFormula };
 
 
@@ -201,10 +173,10 @@ namespace Indicator.ViewModels
             
         }
 
-        public void CreateParametric()
+        public void ConvertTablesToParametric(SignalParametric sp)
         {
-            if (AllFormula.Children != null)
-                AllFormula.Children.Clear();
+            if (sp.Children != null)
+                sp.Children.Clear();
 
             SignalsTables.ForEach(signaltable =>
             {
@@ -212,11 +184,12 @@ namespace Indicator.ViewModels
                 List<SignalArg> _args = new List<SignalArg>();
                 signaltable.CustomRuleSignals.ForEach(customSignal =>
                 {
-                    sva.AddChildWithOperation(customSignal.MainSignal, customSignal.SvaOperation);
+
+                    sva.AddChildWithOperation(customSignal.MainSignal,  customSignal.SvaOperation);
                     _args.Add(new SignalArg("Offset", SignalArg.ArgType.Static, 0, 1000, customSignal.Offset));
                 });
                 sva.Args = _args;
-                AllFormula.AddChild(sva);
+                sp.AddChild(sva);
             }
             );
         }
@@ -227,52 +200,81 @@ namespace Indicator.ViewModels
         {
             await Task.Run(() =>
             {
-                CreateParametric();
+                ConvertTablesToParametric(AllFormula);
 
-                // Обьект SignalParametric готов к сериализации
-                DataContractSerializer serializer = new DataContractSerializer(typeof(SignalParametric));
-                using (FileStream fs = new FileStream("SignalParametric.xml", FileMode.Create))
-                {
-                    //formatter.Serialize(fs, _customRuleSignalsMessage.CustomRuleSignals);
-                    serializer.WriteObject(fs, AllFormula);
-                    Debug.WriteLine("Объект сериализован");
-                };
+                List<SignalParametric> signalParametrics = new List<SignalParametric>();
+                signalParametrics.Add(AllFormula);
+                CustomRuleSignal.SaveParametricSignals(signalParametrics, path);
 
-                
             });
 
         }
 
+        public virtual NotifyObservableCollection<CustomIndicator> CustomIndicators { get; set; }
+
         public void Load()
         {
-            DataContractSerializer serializer = new DataContractSerializer(typeof(SignalParametric));
-            SignalParametric loaded;
-            using (FileStream fs = new FileStream("SignalParametric.xml", FileMode.Open))
-            {
-                //formatter.Serialize(fs, _customRuleSignalsMessage.CustomRuleSignals);
-                 loaded = serializer.ReadObject(fs) as SignalParametric;
-                //  serializer.WriteObject(fs, AllFormula);
-                Debug.WriteLine("Объект десериализован");
-            };
-            //два SVA на выходе из SP
-            for (int x = 0; x < loaded.Children.Count; x++)
-            {
-                var signalstable = new SignalsTableViewModel(true) { Parameter = x.ToString() };// обозначаем таблицу 
-                var childrensva = (loaded.Children[x] as SignalValueArithmetic);
+            
+            CustomIndicators = new NotifyObservableCollection<CustomIndicator>();
 
-                var operations = childrensva.Operations;
-           
-                //обрабатываем каждый.
-                for (int y = 0; y < childrensva.Children.Count; y++)
-                {
-                    //нужно заменить свои сигналы на сигналы в списке..... хотя? 
-                    var customrule = new CustomRuleSignal(y==0?true:false, operations==null? SignalValueArithmetic.Operation.Sum : childrensva.Operations[y], childrensva.Children[y],(int)childrensva.Args[y].BaseValue);
-                    signalstable.CustomRuleSignals.Add(customrule);
-                }
+            // read current custom signals from config file
+            List<CustomIndicator> list = null;
+            try
+            {
+                if (File.Exists(Utils.IndicatorsFileName))
+                    list = CustomIndicator.ReadFromFile(Utils.IndicatorsFileName);
 
-                Messenger.Default.Send(new SignalsTableMessage(signalstable) { Loading = true});
+                if (list != null)
+                    foreach (var i in list)
+                        CustomIndicators.Add(i);
             }
+            catch (Exception ex)
+            {
+                Logger.Current.Debug(ex, "Can't read custom indicators file!");
+            }
+
+
+            // ------- заканчивается тест-------- 
+        
+
+            var loadedlist = CustomRuleSignal.ReadParametricSignals(path);
+            SignalsTableViewModel.LoadParametricToTables(loadedlist.FirstOrDefault());
+ 
             // нужно отправить 
+        }
+
+        public void Add()
+        {
+            var argList = new List<SignalArg>()
+            {
+                new SignalArg(SignalParametric.rule1_Base_Offset_key,SignalArg.ArgType.Static,0,1000000,0),
+                new SignalArg(SignalParametric.rule2_Base_Offset_key,SignalArg.ArgType.Static,0,1000000,0),
+            };
+
+            AllFormula = new SignalParametric("NewIndicator_1", symbolId, Signal.SignalTypes.CustomIndicator, null)
+            {
+                Args = argList,
+                CrossOp = 0, // 0 - одно условие, 1  - два 
+                Rule1_Mode = SignalParametric.RuleMode.Signal,
+                Rule1_Operation = ">",
+                MarketNumber = 1,// используем дефольное значение инструмента и дочерние тоже будут использовать дефолтное
+                ActiveForEntry = true,
+            };
+
+            ConvertTablesToParametric(AllFormula);
+            SignalsTableViewModel.LoadParametricToTables(AllFormula);
+
+            var propertygrid = new PropertyGridViewModel(SignalsTables[0].CustomRuleSignals[2]) { AllSignals = SignalsTables[0].AllSignals };
+            if (propertygrid.SomeCondition)
+            {
+                WindowService.Show("PropertyGrid", propertygrid);
+                WindowService.Activate();
+            }
+            else ThemedMessageBox.Show("No Parameters for this Signal");
+        }
+        public void CreateBasicAriphmetic()
+        {
+          
         }
     }
 }

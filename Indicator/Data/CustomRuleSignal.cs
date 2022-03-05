@@ -4,11 +4,14 @@ using System.Linq;
 using TradersToolbox.Core.Serializable;
 using System.Runtime.Serialization;
 using Indicator.Data;
+using System.IO;
+using System;
+using TradersToolbox.Core;
 
 namespace Indicator.Resource
 {
   
-    public class CustomRuleSignal : /*CustomIndicator,*/INotifyPropertyChanged
+    public class CustomRuleSignal : INotifyPropertyChanged
     {
         /// <summary>
         /// Empty constructor for MVVM
@@ -34,7 +37,7 @@ namespace Indicator.Resource
             if (operation == SignalValueArithmetic.Operation.Mult) Operator = "*";
              
             MainSignal = signal;
-            if (first) Operator = "";
+            if (first & Operator =="+") Operator = "";
         }
 
         /// <summary>
@@ -160,6 +163,47 @@ namespace Indicator.Resource
         {
             OnPropertyChanged(nameof(MainSignal));
             
+        }
+
+
+        public static void SaveParametricSignals(List<SignalParametric> formulas, string path)
+        {
+            try
+            {
+                DataContractSerializer serializer = new DataContractSerializer(typeof(List<SignalParametric>));
+                using (FileStream fs = new FileStream(path, FileMode.Create))
+                {
+                    serializer.WriteObject(fs, formulas);
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Can't read new Custom Indicators file!", ex);
+
+            }
+        }
+        public static List<SignalParametric> ReadParametricSignals(string path)
+        {
+            try
+            {
+                DataContractSerializer serializer = new DataContractSerializer(typeof(List<SignalParametric>));
+                List<SignalParametric> loadedlist;
+                using (FileStream fs = new FileStream(path, FileMode.Open))
+                {loadedlist = serializer.ReadObject(fs) as List<SignalParametric>;};
+                return loadedlist;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Can't read new Custom Indicators file!", ex);
+                
+            }
+        }
+
+
+        public static SignalParametric TryGetParametricFromCustom(CustomIndicator customindicator, List <SignalParametric> loadedlist)
+        {
+            var name = customindicator.shortName;
+            return loadedlist.FirstOrDefault(sp=>sp.Key==name);
         }
 
 

@@ -18,6 +18,10 @@ namespace Indicator.ViewModels
     public class SignalsTableViewModel : ISupportParameter
     {
         protected IWindowService WindowService { get { return this.GetService<IWindowService>(); } }
+
+
+        //description for Indicators
+        //https://bit.ly/3H4b87s
         Dictionary<string, string> SignalsViewable = new Dictionary<string, string>()
         {
             //если пусто, значит мы ничего не меняем
@@ -118,6 +122,8 @@ namespace Indicator.ViewModels
         /// Это нужно для правильного построения формулы и десериализации
         /// </summary>
         public string TableNumber ;
+        internal static List<SignalParametric> loadedlist;
+
         public virtual object Parameter
         {
             get => TableNumber; set
@@ -136,7 +142,7 @@ namespace Indicator.ViewModels
         private void OnSignalsTableMessage(SignalsTableMessage signalstable)
         {
             if (!signalstable.Loading ) return;
-            if (TableNumber != signalstable.SignalsTable.Parameter) return;
+            if (TableNumber != (string)signalstable.SignalsTable.Parameter) return;
             else
             {
                 //временно 
@@ -159,12 +165,15 @@ namespace Indicator.ViewModels
         private void GenerateSignals()
         {
 
-           // var vixid = new SymbolId("@Vix", "1D", 0, false);
+           
+
+            // var vixid = new SymbolId("@Vix", "1D", 0, false);
             var es = new SymbolId("@ES", "1D", 0, false);
             //var seclist = new List<SymbolId>() { new SymbolId("@Vix", "1D", 0, false) };
             var seclist = new List<SymbolId>() { new SymbolId("@ES", "1D", 0, false)};
 
             AllSignals.Add(new SignalValueConstant((float)0.5, es) { Text = "Value", MarketNumber =1 });
+           
 
             //позже добавить в этот список число, чтобы реализовать формулу 0.5 * Close[0]
             var signalsFromCore = SignalsFactory.GetBaseSignals(seclist).Where(s => s.Type == Signal.SignalTypes.BaseValuable);
@@ -215,7 +224,7 @@ namespace Indicator.ViewModels
         public SignalsTableViewModel(bool load = false)
         {
             Loader = load;
-            if (Loader) 
+            if (Loader)
             {
                 CustomRuleSignals = new NotifyObservableCollection<CustomRuleSignal>();
                 return;
@@ -239,7 +248,7 @@ namespace Indicator.ViewModels
             SubscribeNotificationsAndUpdate(CustomRuleSignals);
             //Чтобы определить, что есть что. 
             //Для инициализации
-            
+
         }
 
         /// <summary>
@@ -258,6 +267,36 @@ namespace Indicator.ViewModels
         private void S_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             SendUpdateMessage();
+        }
+
+
+        public static void LoadParametricToTables(SignalParametric sp)
+        {
+            try
+            {
+                for (int x = 0; x < sp.Children.Count; x++)
+                {
+                    var signalstable = new SignalsTableViewModel(true) { Parameter = x.ToString() };// обозначаем таблицу 
+                    var childrensva = (sp.Children[x] as SignalValueArithmetic);
+
+                    var operations = childrensva.Operations;
+
+                    //обрабатываем каждый.
+                    for (int y = 0; y < childrensva.Children.Count; y++)
+                    {
+                        //нужно заменить свои сигналы на сигналы в списке..... хотя? 
+                        var customrule = new CustomRuleSignal(y == 0 ? true : false, operations == null ? SignalValueArithmetic.Operation.Sum : childrensva.Operations[y], childrensva.Children[y], (int)childrensva.Args[y].BaseValue);
+                        signalstable.CustomRuleSignals.Add(customrule);
+                    }
+
+                    Messenger.Default.Send(new SignalsTableMessage(signalstable) { Loading = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Can't load signal parametric", ex);
+            }
+
         }
 
 
@@ -284,29 +323,16 @@ namespace Indicator.ViewModels
 
         public void Edit()
         {
-            var iscostant = SelectedCustomRuleSignal.MainSignal is SignalValueConstant;
-            var propertygrid = new PropertyGridViewModel(SelectedCustomRuleSignal) { AllSignals = AllSignals };
-            
-            /*if (iscostant)
+            try
             {
-                WindowService.Show("PropertyGrid", propertygrid);
-                return;
+                var propertygrid = new PropertyGridViewModel(SelectedCustomRuleSignal) { AllSignals = AllSignals };
+                if (propertygrid.SomeCondition)
+                    WindowService.Show("PropertyGrid", propertygrid);
+                else ThemedMessageBox.Show("No Parameters for this Signal");
+              
             }
-            else if (SelectedCustomRuleSignal.MainSignal.Args == null  )
-            {
-                ThemedMessageBox.Show("No Parameters for this Signal");
-                return;
-            }
-            else if (SelectedCustomRuleSignal.MainSignal.Args.Count == 0 )
-            {
-                ThemedMessageBox.Show("No Parameters for this Signal");
-                return;
-            }*/
-  
-             WindowService.Show("PropertyGrid", propertygrid);
-
-
-
+            catch (Exception ex)
+            { ThemedMessageBox.Show(ex.Message); }
         }
 
         #endregion

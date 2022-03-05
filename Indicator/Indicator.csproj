@@ -11,6 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DevExpress.Mvvm.CodeGenerators" Version="21.2.1.1" />
+    <PackageReference Include="devexpress.wpf.controls" Version="21.2.4" />
     <PackageReference Include="DevExpress.Wpf.Core" Version="21.2.*-*" />
     <PackageReference Include="devexpress.wpf.grid.core" Version="21.2.4" />
     <PackageReference Include="devexpress.wpf.propertygrid" Version="21.2.4" />

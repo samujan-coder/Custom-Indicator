@@ -76,6 +76,11 @@ namespace Indicator
             SignalValueKeltnerChannel sKeltnerChannelUp = new SignalValueKeltnerChannel("KeltnerChannelUp", symId, sSMA20, sATR,
                      new SignalArg("Mult", SignalArg.ArgType.Static, -1000000, 1000000, (decimal)1.5));
             var text = sKeltnerChannelUp.TextVisual;
+
+            //
+          
+
+
         }
 
 

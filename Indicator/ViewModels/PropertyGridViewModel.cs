@@ -15,6 +15,11 @@ using DevExpress.Mvvm.Native;
 using TradersToolbox.Core;
 using System.Globalization;
 
+//description for Indicators
+//https://bit.ly/3H4b87s
+
+//TODO Нужен рефакторинг кода!
+
 namespace Indicator.ViewModels
 {
 
@@ -24,12 +29,18 @@ namespace Indicator.ViewModels
         public IEnumerable<Signal> AllSignals { get; set; }
 
 
+        /// <summary>
+        /// Какое то условие для индикатора
+        /// Если условий нет, то не откроется таблица настроек 
+        /// </summary>
+        public bool SomeCondition { get; set; } = false;
+
         public void UpdateFormula()
         {
-            //FormulaProperty = CustomSignal.MainSignal.TextVisual;
+            FormulaProperty = CustomSignal.MainSignal.TextVisual;
         }
-        public string FormulaProperty //{ get; set; }
-        {
+        public string FormulaProperty { get; set; }
+        /*{
             get
             {
                 if (CustomSignal != null && CustomSignal.MainSignal != null)
@@ -37,23 +48,12 @@ namespace Indicator.ViewModels
                 else return "";
             }
 
-        }
+        }*/
 
         protected IWindowService WindowService { get { return this.GetService<IWindowService>(); } }
 
-        public string[] SignalsString { get; } = { "Close", "Open", "High", "Low", };
+        public string[] SignalsString { get; } = { "Open", "High", "Low", "Close", };
 
-
-        private string _selectedproperty;
-        public string SelectedProperty { get => _selectedproperty; set {
-                _selectedproperty = value;
-
-                var getNumbers = (from t in _selectedproperty
-                                  where char.IsDigit(t)
-                                  select t).ToArray();
-                var i = (int)Char.GetNumericValue(getNumbers[0]);
-                //SelectedExtraSignal = ExtraSignals[i];
-            } }
         protected ICurrentWindowService CurrentWindowService { get { return this.GetService<ICurrentWindowService>(); } }
         public static PropertyGridViewModel Create()
         {
@@ -66,37 +66,26 @@ namespace Indicator.ViewModels
         public Signal Signal;
 
 
-
-
         private CustomRuleSignal CustomSignal;
 
-        [Description("Settings")]
-        /// <summary>
-        /// Args for Values (Length/max(N)/min(N))
-        /// Сохраняем сразу на лету!
-        /// </summary>
         public ObservableCollection<SignalArg> ValueArgs { get => Signal.AllArgs; set => Signal.Args = value.ToList(); }
 
         public List<string> SignalsListComp { get; set; }
 
         public SignalArg LengthArg { get; set; }
 
-        [Description("ChildSignals")]
-        /// <summary>
-        /// Child signals (CLOSE,OPEN, HIGH, LOW) 
-        /// </summary>
-        public ObservableCollection<Signal> ChildSignals { get; set; }
-
-
 
         public ICommand SaveWindowCommand { get; private set; }
-        public ICommand OpenChildCommand { get; private set; }
 
 
         /// <summary>
         /// Только длина 
         /// </summary>
         private bool onlyLength;
+        private bool autocor;
+        private bool onlyconstant;
+        private bool bollingerband;
+
         /// <summary>
         ///  DATA + LookBack Pattern
         /// </summary>
@@ -106,25 +95,25 @@ namespace Indicator.ViewModels
         /// Только Consecutive
         /// </summary>
         private bool onlyData;
+        private bool onlyPsar;
+        private bool complexChild;
 
         private bool twoLookBackAndData;
+        private bool onlyMacdHist;
         private bool threeLookBack;
         private bool twoLookBack2;
 
         public void CreateAllSettings(Signal signal = null)
         {
-
-
             SaveWindowCommand = new DelegateCommand(() => SaveWindow());
-            OpenChildCommand = new DelegateCommand(() => OpenChild());
-
-            // Под вопросом  
-            // Signal is SignalValueConsecutive || ConsecHigherOpen	Consecutive 
-            // Добавлен, но почему то выдает только один Child 
-
-            // Signal is SignalValueROC_MOMO; //   Одновременно Roc и Mom
-
             if (signal == null) return;
+
+
+            onlyconstant = Signal is SignalValueConstant;//Только константное значение 
+
+            bollingerband = Signal is SignalValueBollingerBand; //BollingerBands 
+
+            complexChild = Signal is SignalValueKeltnerChannel;// Keltner 
 
 
             patternDataLookBack =
@@ -142,31 +131,82 @@ namespace Indicator.ViewModels
                 signal is SignalValueRangeStochasticATR || // ATR and  Stochastics
                 signal is SignalValueKaufman || // KER10	KaufmanEfficiencyRatio
                 signal is SignalValueCCI || //CCI20	CCI
-                signal is SignalValueDMI_ADX; //Hurst DMIp DMIm ADX
-                                              // signal is SignalValueRangeStochasticATR;
+                signal is SignalValueDMI_ADX; 
+
+
+            autocor = signal is SignalValueAutocor;//Autocor
 
             twoLookBackAndData =
-                signal is SignalValueAutocor || //Autocor
-                signal is SignalValueMACD; // Проверить, потому что MACDSignal имеет другой паттерн 
+                signal is SignalValueMACD && signal.Key == "MACD"; // работаем с MACD 
 
-            threeLookBack = signal is SignalValueMedian;//CompSMA CompEMA
+            onlyMacdHist = signal is SignalValueMACD && signal.Key == "MACDhist"; // работаем с MACD HIST
+
+            threeLookBack =
+                signal is SignalValueMedian || //CompSMA CompEMA
+                signal is SignalValueMACD && signal.Key == "MACDema";// MACDema
 
             twoLookBack2 = signal is SignalValueComposite; // COMPRSI, COMPATR, CompHur, CompSto
 
             onlyData = Signal is SignalValueConsecutive;
-        }
 
+            onlyPsar = Signal is SignalValuePSAR;
+
+
+
+        }
 
         public PropertyGridViewModel() 
         {
             CreateAllSettings();
         }
 
-        /// <summary>
-        /// Паттерны разработки
-        /// </summary>
-        public int pattern;
 
+        public void GetSaveSpecial(string property, bool save = false)
+        {
+
+            SomeCondition = true;
+
+            if (property == "Value")
+            {
+                if (!save)
+                    Value = float.Parse(Signal.TextVisual, CultureInfo.InvariantCulture.NumberFormat);
+                else
+                {
+                    CustomSignal.MainSignal = new SignalValueConstant(Value, symbolId);
+                }
+
+            }
+            if (property == "Mult")
+            {
+                if (!save)
+                    Mult = (int)ValueArgs[1].BaseValue;
+                else
+                {
+                    Signal.Args[1] = new SignalArg(property, SignalArg.ArgType.Static, 0, 100000, Mult);
+                }
+
+            }
+            if(property == "Step")
+            {
+                if (!save)
+                    Step = (int)ValueArgs[0].BaseValue;
+                else
+                {
+                    Signal.Args[0] = new SignalArg(property, SignalArg.ArgType.Static, 0, 100000, Step);
+                }
+
+            }
+
+            if (property == "Limit")
+            {
+                if (!save)
+                    Limit = (int)ValueArgs[1].BaseValue;
+                else
+                {
+                    Signal.Args[1] = new SignalArg(property, SignalArg.ArgType.Static, 0, 100000, Limit);
+                }
+            }
+        }
         /// <summary>
         /// Отображение или сохранение длины 
         /// </summary>
@@ -174,17 +214,19 @@ namespace Indicator.ViewModels
         /// <param name="save"></param>
         public void GetSaveLookback(int i, bool save = false)
         {
+            SomeCondition = true;
+
             if (!save)
             {   
                 if(i ==1)
                 LookBack = (int)ValueArgs[0].BaseValue;
 
-                if(i==2)
+                if (i == 2)
                 {
                     LookBack1 = (int)ValueArgs[0].BaseValue;
                     LookBack2 = (int)ValueArgs[1].BaseValue;
                 }
-                if(i==3)
+                if (i == 3)
                 {
                     LookBack1 = (int)ValueArgs[0].BaseValue;
                     LookBack2 = (int)ValueArgs[1].BaseValue;
@@ -217,6 +259,8 @@ namespace Indicator.ViewModels
         /// <param name="complex">вложенный Close внутри дочерней стратегии</param>
         public void GetSaveData(bool save = false, bool complex = false)
         {
+            SomeCondition = true;
+
             if (!save)
             {
                 if(!complex)
@@ -236,104 +280,101 @@ namespace Indicator.ViewModels
                 
                 if(complex)
                 {
-                    //MACD не работает сохранение на лету 
                     Signal.Children[0].Children[0] = newraw;
                     Signal.Children[1].Children[0] = newraw;
 
-                  
                 }
               
             }
         }
+
+        public void ShowAndSave(bool save)
+        {
+            if (onlyPsar)
+            {
+                GetSaveSpecial("Step", save);
+                GetSaveSpecial("Limit", save);
+            }
+
+            if (onlyconstant)
+            {
+                //Value = Convert.ToDecimal(Signal.TextVisual, new CultureInfo("en-US"));
+                GetSaveSpecial("Value", save);
+            }
+
+            if(bollingerband)
+            {
+                GetSaveLookback(1, save);
+                GetSaveData(save, false);
+                GetSaveSpecial("Mult", save);
+
+            }
+            if (complexChild)
+            {
+                GetSaveLookback(1, save);
+                GetSaveData(save, true);
+                GetSaveSpecial("Mult", save);
+            }
+
+            if (onlyData) // сейчас это Consecutive 
+            {
+                GetSaveData(save);
+            }
+
+            if (onlyLength)
+            {
+                GetSaveLookback(1, save);
+            }
+            if (twoLookBack2)
+            {
+                GetSaveLookback(2, save);
+            }
+
+            if (patternDataLookBack)
+            {
+                GetSaveLookback(1, save);
+                GetSaveData(save);
+            }
+            if (autocor)
+            {
+                GetSaveLookback(2, save);
+                GetSaveData(save, false); //AUTOCOR
+            }
+            if (twoLookBackAndData)
+            {
+                GetSaveLookback(2, save);
+                GetSaveData(save, true);
+            }
+            if(onlyMacdHist)
+            {
+                GetSaveLookback(3, save);
+                GetSaveData(save, true);
+            }
+            if (threeLookBack)
+            {
+                GetSaveLookback(3, save);
+            }
+
+        }
+
         public PropertyGridViewModel(CustomRuleSignal customSignal)
         {
             try
             {
+               // FormulaProperty = "1";
                 if (customSignal != null)
                 {
                     Signal = customSignal.MainSignal;
                     CustomSignal = customSignal;
 
-                    //UpdateFormula();
+                    UpdateFormula();
                 }
 
                 CreateAllSettings(Signal);
 
                 ValueArgs = Signal.AllArgs; // length
-                ChildSignals = Signal.Children; // Close, Open, High
-
-                if (Signal is SignalValueConstant)
-                {
-                    //Value = Convert.ToDecimal(Signal.TextVisual, new CultureInfo("en-US"));
-                    Value = float.Parse(Signal.TextVisual, CultureInfo.InvariantCulture.NumberFormat);
-                }
-
-                //не дописан 
-                if (onlyData)
-                {
-                    GetSaveData();
-                }
-
-                if (onlyLength)
-                {
-                    // Example WinsLast (5) or Stochastics(2)
-                    GetSaveLookback(1);
-                }
-                if(twoLookBack2)
-                {
-                   GetSaveLookback(2);
-                }
-
-                if (patternDataLookBack)
-                {
-                    GetSaveLookback(1);
-                    GetSaveData();
-                }
-
-                if(twoLookBackAndData)
-                {
-                    GetSaveLookback(2);
-                    GetSaveData(false,true);
-                }
-
-                if(threeLookBack)
-                {
-                    GetSaveLookback(3);
-                }
-
-                if (Signal is SignalValueKeltnerChannel)
-                {
-
-                }
-
-                /*
-                //? вообще если такой параметр? помоему нет ))
-                if (valueArgsCount == 1 && datasignalsCount == 0)
-                {// Example WinsLast (5) or Stochastics(2)
-                 // ShowOnlyLength1 
-                    pattern = 1;
-                    LengthArg = ValueArgs[0];
-                    Length1 = (int)LengthArg.BaseValue;
-
-                }
-                else if (valueArgsCount == 1 && datasignalsCount == 1)
-                {// highest (open, 5), lowest (close, 5) 
-
-                    pattern = 2;
-                    LengthArg = ValueArgs[0];
-                    Length1 = (int)LengthArg.BaseValue;
-                   // Data = dataVariants.FirstOrDefault(s => s.Variant == ChildSignals[0].Key);
-
-                }
-                else if (valueArgsCount == 2 && datasignalsCount == 1)
-                {//BollingerBand(c,20,2)
-
-                    pattern = 3;
-                    Length1 = (int)ValueArgs[0].BaseValue;
-                    Length2 = (int)ValueArgs[1].BaseValue;
-                   // Data = dataVariants.FirstOrDefault(s => s.Variant == ChildSignals[0].Key);
-                }*/
-
+               
+                ShowAndSave(false);
 
             }
             catch (Exception ex)
@@ -341,16 +382,34 @@ namespace Indicator.ViewModels
 
         }
 
-        //----- для значений------------
+        public void SaveWindow()
+        {
+
+            try
+            {
+                ShowAndSave(true);
+                //FormulaProperty = "2";
+
+                //Updating 
+                if (CustomSignal != null)
+                {
+                    CustomSignal.UpdateMainSignal();
+                    UpdateFormula(); 
+                }
+
+                //CurrentWindowService.Close();
+
+            }
+            catch (Exception ex)
+            { ThemedMessageBox.Show(ex.Message); }
+
+        }
+
+        //----- для значений------------//
         public bool ValueVisible { get; set; }
         private float _value;
         public float Value { get => _value; 
             set { _value = value; ValueVisible = true; } }
-
-
-        /// <summary>
-        /// (Length/max(N)/min(N)) 1
-        /// </summary>
         public int LookBack { get => _lookback; set { _lookback = value; LookBackVisible = true; } }
         private int _lookback;
         public bool LookBackVisible { get; set; }
@@ -366,103 +425,24 @@ namespace Indicator.ViewModels
         public int LookBack3 { get => _lookback3; set { _lookback3 = value; LookBack3Visible = true; } }
         private int _lookback3;
         public bool LookBack3Visible { get; set; }
-
-
-
         public bool DataVisible { get; set; }
         private string _data;
         public string Data { get => _data; set { DataVisible = true; _data = value; } }
 
-        public void SaveWindow()
-        {
+        public bool MultVisible { get; set; }
+        private decimal _mult;
+        public decimal Mult { get => _mult; set { MultVisible = true; _mult = value; } }
 
-            try
-            {
+        public bool StepVisible { get; set; }
+        private decimal _step;
+        public decimal Step { get => _step; set { StepVisible = true; _step = value; } }
 
-                if (Signal is SignalValueConstant)
-                {
-                    CustomSignal.MainSignal = new SignalValueConstant(Value, symbolId);
-                }
+        public bool LimitVisible { get; set; }
+        private decimal _limit;
+        public decimal Limit { get => _limit; set { LimitVisible = true; _limit = value; } }
 
-                if (onlyData)
-                {
-                    GetSaveData(true);
-                }
+       
 
-                if (onlyLength)
-                { // Example WinsLast (5) or Stochastics(2)
-                    GetSaveLookback(1,true);
-                }
-
-                if (patternDataLookBack)
-                {  //case rsi (Open,5)
-                    GetSaveLookback(1,true);
-                    GetSaveData(true);
-
-                }
-
-                if (twoLookBackAndData)
-                {
-                    GetSaveLookback(2,true);
-                    GetSaveData(true, true);
-                }
-
-                if (twoLookBackAndData)
-                {
-                    GetSaveLookback(2,true);
-                    GetSaveData(true);
-                }
-
-                if (twoLookBack2)
-                {
-                    GetSaveLookback(2,true);
-                }
-
-                if (threeLookBack)
-                {
-                    GetSaveLookback(3,true);
-                }
-                /*else if (pattern == 3)
-                {
-                    ////BollingerBand(c,20,2)
-                    Signal.Args[0] = new SignalArg("Length", SignalArg.ArgType.Static, 0, 100000, Length1);
-                    Signal.Args[1] = new SignalArg("Length", SignalArg.ArgType.Static, 0, 100000, Length2);
-                    Signal.Children[0] = new SignalValueRAW(Data.Variant, symbolId);
-                }*/
-
-                //Updating 
-                if (CustomSignal != null)
-                {
-                    CustomSignal.UpdateMainSignal();
-
-                }
-
-                //CurrentWindowService.Close();
-
-            }
-            catch (Exception ex)
-            { ThemedMessageBox.Show(ex.Message); }
-
-        }
-
-        public void OpenChild()
-        {
-            if (Signal.Args == null)
-            {
-                ThemedMessageBox.Show("No Parameters for this Signal");
-                return;
-            }
-            if (Signal.Args.Count == 0)
-            {
-                ThemedMessageBox.Show("No Parameters for this Signal");
-                return;
-            }
-
-           // var propertygrid = new PropertyGridViewModel(CustomSignal, SelectedExtraSignal.Signal) { AllSignals = AllSignals };
-            //WindowService.Show("PropertyGrid", propertygrid);
-            //WindowService.Show("SignalsTable", signalstable);
-            
-        }
 
     }
 }
