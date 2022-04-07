@@ -23,8 +23,8 @@
         <dxmvvm:WindowService AllowSetWindowOwner="False">
             <dxmvvm:WindowService.WindowStyle>
                 <Style TargetType="dx:ThemedWindow">
-                    <Setter Property="Width" Value="300" />
-                    <Setter Property="Height" Value="150" />
+                    <Setter Property="Width" Value="500" />
+                    <Setter Property="Height" Value="300" />
                 </Style>
             </dxmvvm:WindowService.WindowStyle>
         </dxmvvm:WindowService>

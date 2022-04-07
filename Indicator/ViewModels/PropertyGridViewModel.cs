@@ -24,11 +24,32 @@ namespace Indicator.ViewModels
 {
 
     [POCOViewModel]
+    public class Formula : INotifyPropertyChanged
+    {
+        private string _index;
+        public string Index
+        {
+            get => _index; set
+            {
+                _index = value;
+                OnPropertyChanged("Index");
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+    }
+
+    [POCOViewModel]
     public class PropertyGridViewModel
     {
         public IEnumerable<Signal> AllSignals { get; set; }
 
-
+        public Formula Formula { get; set; }
         /// <summary>
         /// Какое то условие для индикатора
         /// Если условий нет, то не откроется таблица настроек 
@@ -38,6 +59,7 @@ namespace Indicator.ViewModels
         public void UpdateFormula()
         {
             FormulaProperty = CustomSignal.MainSignal.TextVisual;
+            Formula.Index = CustomSignal.MainSignal.TextVisual;
         }
         public string FormulaProperty { get; set; }
         /*{
@@ -361,6 +383,8 @@ namespace Indicator.ViewModels
         {
             try
             {
+
+                Formula = new Formula();
                // FormulaProperty = "1";
                 if (customSignal != null)
                 {

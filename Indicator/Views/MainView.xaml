@@ -21,8 +21,8 @@
         <dxmvvm:WindowService>
             <dxmvvm:WindowService.WindowStyle>
                 <Style TargetType="dx:ThemedWindow">
-                    <Setter Property="Width" Value="300" />
-                    <Setter Property="Height" Value="150" />
+                    <Setter Property="Width"  Value="500"/>
+                    <Setter Property="Height" Value="500"/>
                 </Style>
             </dxmvvm:WindowService.WindowStyle>
         </dxmvvm:WindowService>

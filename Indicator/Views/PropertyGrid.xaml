@@ -9,7 +9,10 @@
              xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
              xmlns:dxprg="http://schemas.devexpress.com/winfx/2008/xaml/propertygrid" 
              DataContext="{dxmvvm:ViewModelSource Type={x:Type ViewModels:PropertyGridViewModel}}"
-             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core" >
+             xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core" 
+             xmlns:views="clr-namespace:Indicator.Views" 
+             Width="auto" Height="auto"
+             >
     <UserControl.Resources>
         <DataTemplate x:Key="DataTemplate">
             <dxe:ComboBoxEdit ItemsSource="{Binding DataVariants, Mode=TwoWay}" DisplayMember="Value" ValueMember="Key"   />
@@ -26,7 +29,8 @@
    
 
     <StackPanel>
-        <TextBlock x:Name="FinalFormula" TextWrapping="Wrap" Padding="2" Text="{Binding FormulaProperty, Mode=TwoWay}" TextAlignment="Center" FontSize="14"/>
+        <views:SignalsTable/>
+        <TextBlock x:Name="FinalFormula" TextWrapping="Wrap" Padding="2" Text="{Binding Formula.Index, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" FontSize="14"/>
         <dxprg:PropertyGridControl ShowProperties="WithPropertyDefinitions" ScrollViewer.VerticalScrollBarVisibility="Hidden" ShowSearchBox="False" ShowCategories="Hidden" ShowToolPanel="False" SelectedObject="{Binding}">
             <dxprg:PropertyDefinition Path="Value" ShowEditorButtons="True" Visibility="{Binding ValueVisible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
             <dxprg:PropertyDefinition Path="LookBack" ShowEditorButtons="True" Visibility="{Binding LookBackVisible,Converter={StaticResource BooleanToVisibilityConverter}}"/>
